@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>翻页数字时钟</title>
+  <link rel="stylesheet" href="./style.css">
+</head>
+<body>
+  <div class="container">
+    <canvas id="clockCanvas"></canvas>
+    <div class="controls">
+      <div class="theme-selector">
+        <label>主题:</label>
+        <select id="themeSelect">
+          <option value="classic">经典</option>
+          <option value="dark">暗黑</option>
+          <option value="light">明亮</option>
+          <option value="ocean">海洋</option>
+          <option value="sunset">日落</option>
+          <option value="custom">自定义</option>
+        </select>
+      </div>
+      <div class="color-picker" id="colorPicker">
+        <div class="color-item">
+          <label>前景色:</label>
+          <input type="color" id="foregroundColor" value="#ffffff">
+        </div>
+        <div class="color-item">
+          <label>背景色:</label>
+          <input type="color" id="backgroundColor" value="#1a1a2e">
+        </div>
+        <div class="color-item">
+          <label>数字色:</label>
+          <input type="color" id="digitColor" value="#ffffff">
+        </div>
+        <div class="color-item">
+          <label>分隔符色:</label>
+          <input type="color" id="separatorColor" value="#ff6b6b">
+        </div>
+      </div>
+    </div>
+  </div>
+  <script type="module" src="./main.js"></script>
+</body>
+</html>
