@@ -245,8 +245,8 @@ function drawMiddleLine(x, y, width, height, theme) {
 }
 
 // 绘制翻页动画的上半部分（旧数字向下翻）
-function drawFlippingTop(x, y, width, height, digit, progress, theme) {
-  const angle = progress * Math.PI;
+function drawFlippingTopOld(x, y, width, height, digit, progress, theme) {
+  const angle = progress * Math.PI / 2;
   const cosAngle = Math.cos(angle);
   
   if (cosAngle <= 0) return;
@@ -282,12 +282,13 @@ function drawFlippingTop(x, y, width, height, digit, progress, theme) {
   ctx.restore();
 }
 
-// 绘制翻页动画的下半部分（新数字向下翻）
-function drawFlippingBottom(x, y, width, height, digit, progress, theme) {
-  const angle = progress * Math.PI;
+// 绘制翻页动画的上半部分（新数字向上显示）
+function drawFlippingTopNew(x, y, width, height, digit, progress, theme) {
+  const angle = progress * Math.PI / 2;
   const cosAngle = Math.cos(angle);
+  const scaleY = 1 - cosAngle;
   
-  if (cosAngle >= 0) return;
+  if (scaleY <= 0) return;
   
   ctx.save();
   
@@ -295,7 +296,46 @@ function drawFlippingBottom(x, y, width, height, digit, progress, theme) {
   const centerY = y + height / 2;
   
   ctx.translate(centerX, centerY);
-  ctx.scale(1, -cosAngle);
+  ctx.scale(1, scaleY);
+  ctx.translate(-centerX, -centerY);
+  
+  ctx.beginPath();
+  ctx.rect(x, y, width, height / 2);
+  ctx.clip();
+  
+  ctx.fillStyle = theme.foreground;
+  ctx.fillRect(x, y, width, height / 2);
+  
+  const gradient = ctx.createLinearGradient(x, y, x, y + height / 2);
+  gradient.addColorStop(0, 'rgba(0, 0, 0, 0)');
+  gradient.addColorStop(1, 'rgba(0, 0, 0, 0.2)');
+  ctx.fillStyle = gradient;
+  ctx.fillRect(x, y, width, height / 2);
+  
+  ctx.fillStyle = theme.digit;
+  ctx.font = `bold ${height * 0.8}px Arial`;
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.fillText(digit, centerX, centerY);
+  
+  ctx.restore();
+}
+
+// 绘制翻页动画的下半部分（新数字向下翻）
+function drawFlippingBottomNew(x, y, width, height, digit, progress, theme) {
+  const angle = progress * Math.PI / 2;
+  const cosAngle = Math.cos(angle);
+  const scaleY = 1 - cosAngle;
+  
+  if (scaleY <= 0) return;
+  
+  ctx.save();
+  
+  const centerX = x + width / 2;
+  const centerY = y + height / 2;
+  
+  ctx.translate(centerX, centerY);
+  ctx.scale(1, scaleY);
   ctx.translate(-centerX, -centerY);
   
   ctx.beginPath();
@@ -306,8 +346,8 @@ function drawFlippingBottom(x, y, width, height, digit, progress, theme) {
   ctx.fillRect(x, y + height / 2, width, height / 2);
   
   const gradient = ctx.createLinearGradient(x, y + height / 2, x, y + height);
-  gradient.addColorStop(0, 'rgba(0, 0, 0, 0)');
-  gradient.addColorStop(1, 'rgba(0, 0, 0, 0.3)');
+  gradient.addColorStop(0, 'rgba(0, 0, 0, 0.2)');
+  gradient.addColorStop(1, 'rgba(0, 0, 0, 0.4)');
   ctx.fillStyle = gradient;
   ctx.fillRect(x, y + height / 2, width, height / 2);
   
@@ -343,27 +383,38 @@ function drawFlipDigit(x, y, width, height, digit, flipProgress = 0, oldDigit = 
   
   // 翻页动画逻辑（正确的顺序）：
   // 1. 底层：
-  //    - 上半部分：新数字的上半部分（静态，在旧数字翻走后显示）
+  //    - 上半部分：空（新数字的上半部分会逐渐显示）
   //    - 下半部分：旧数字的下半部分（静态，被新数字逐渐遮盖）
   // 2. 翻页层：
-  //    - 前半段（0-50%）：旧数字的上半部分向下翻
-  //    - 后半段（50-100%）：新数字的下半部分向下翻
+  //    - 前半段（0-50%）：
+  //      * 旧数字的上半部分向下翻（scaleY从1到0）
+  //      * 新数字的上半部分从中间轴线向上逐渐显示（scaleY从0到1）
+  //    - 后半段（50-100%）：
+  //      * 新数字的上半部分完全显示
+  //      * 新数字的下半部分从中间轴线向下逐渐显示（scaleY从0到1）
   
-  // 绘制底层：新数字的上半部分
-  drawTopHalf(x, y, width, height, digit, theme);
-  
-  // 绘制底层：旧数字的下半部分
+  // 绘制底层：旧数字的下半部分（始终显示，直到被新数字遮盖）
   drawBottomHalf(x, y, width, height, oldDigit, theme);
   
   // 绘制翻页动画
   if (flipProgress < 0.5) {
-    // 前半段：旧数字的上半部分向下翻（覆盖在新数字上半部分之上）
+    // 前半段（0-50%）
     const progress = flipProgress * 2;
-    drawFlippingTop(x, y, width, height, oldDigit, progress, theme);
+    
+    // 先绘制新数字的上半部分（从中间向上逐渐显示）
+    drawFlippingTopNew(x, y, width, height, digit, progress, theme);
+    
+    // 再绘制旧数字的上半部分（向下翻，逐渐消失）
+    drawFlippingTopOld(x, y, width, height, oldDigit, progress, theme);
   } else {
-    // 后半段：新数字的下半部分向下翻（覆盖在旧数字下半部分之上）
+    // 后半段（50-100%）
     const progress = (flipProgress - 0.5) * 2;
-    drawFlippingBottom(x, y, width, height, digit, progress, theme);
+    
+    // 新数字的上半部分完全显示
+    drawTopHalf(x, y, width, height, digit, theme);
+    
+    // 新数字的下半部分从中间向下逐渐显示
+    drawFlippingBottomNew(x, y, width, height, digit, progress, theme);
   }
   
   // 绘制中间分隔线（始终在最上层）
