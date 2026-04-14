@@ -1,31 +1,31 @@
 // 预定义色彩主题
 const themes = {
   classic: {
-    foreground: '#ffffff',
+    foreground: '#2d2d44',
     background: '#1a1a2e',
     digit: '#ffffff',
     separator: '#ff6b6b'
   },
   dark: {
-    foreground: '#e0e0e0',
+    foreground: '#1e1e1e',
     background: '#121212',
     digit: '#e0e0e0',
     separator: '#bb86fc'
   },
   light: {
-    foreground: '#333333',
+    foreground: '#ffffff',
     background: '#f5f5f5',
     digit: '#333333',
     separator: '#ff5722'
   },
   ocean: {
-    foreground: '#e0f7fa',
+    foreground: '#00796b',
     background: '#006064',
     digit: '#e0f7fa',
     separator: '#00bcd4'
   },
   sunset: {
-    foreground: '#fff3e0',
+    foreground: '#ff8a65',
     background: '#e65100',
     digit: '#fff3e0',
     separator: '#ffcc02'
@@ -251,11 +251,14 @@ function drawFlipDigit(x, y, width, height, digit, flipProgress = 0, oldDigit = 
   }
   
   // 翻页动画
-  // 上半部分显示旧数字
+  // 上半部分显示旧数字（先绘制背景）
   ctx.save();
   ctx.beginPath();
   ctx.rect(x, y, width, height / 2);
   ctx.clip();
+  
+  ctx.fillStyle = theme.foreground;
+  ctx.fillRect(x, y, width, height / 2);
   
   ctx.fillStyle = theme.digit;
   ctx.font = `bold ${height * 0.8}px Arial`;
@@ -265,11 +268,14 @@ function drawFlipDigit(x, y, width, height, digit, flipProgress = 0, oldDigit = 
   
   ctx.restore();
   
-  // 下半部分显示新数字
+  // 下半部分显示新数字（先绘制背景）
   ctx.save();
   ctx.beginPath();
   ctx.rect(x, y + height / 2, width, height / 2);
   ctx.clip();
+  
+  ctx.fillStyle = theme.foreground;
+  ctx.fillRect(x, y + height / 2, width, height / 2);
   
   ctx.fillStyle = theme.digit;
   ctx.font = `bold ${height * 0.8}px Arial`;
