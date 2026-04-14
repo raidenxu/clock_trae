@@ -196,6 +196,120 @@ function startFlip(digitKey, oldValue, newValue) {
   };
 }
 
+// 绘制数字的上半部分
+function drawTopHalf(x, y, width, height, digit, theme) {
+  ctx.save();
+  ctx.beginPath();
+  ctx.rect(x, y, width, height / 2);
+  ctx.clip();
+  
+  ctx.fillStyle = theme.foreground;
+  ctx.fillRect(x, y, width, height / 2);
+  
+  ctx.fillStyle = theme.digit;
+  ctx.font = `bold ${height * 0.8}px Arial`;
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.fillText(digit, x + width / 2, y + height / 2);
+  
+  ctx.restore();
+}
+
+// 绘制数字的下半部分
+function drawBottomHalf(x, y, width, height, digit, theme) {
+  ctx.save();
+  ctx.beginPath();
+  ctx.rect(x, y + height / 2, width, height / 2);
+  ctx.clip();
+  
+  ctx.fillStyle = theme.foreground;
+  ctx.fillRect(x, y + height / 2, width, height / 2);
+  
+  ctx.fillStyle = theme.digit;
+  ctx.font = `bold ${height * 0.8}px Arial`;
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.fillText(digit, x + width / 2, y + height / 2);
+  
+  ctx.restore();
+}
+
+// 绘制翻页动画的上半部分（旧数字向下翻）
+function drawFlippingTop(x, y, width, height, digit, progress, theme) {
+  const angle = progress * Math.PI;
+  const cosAngle = Math.cos(angle);
+  
+  if (cosAngle <= 0) return;
+  
+  ctx.save();
+  
+  const centerX = x + width / 2;
+  const centerY = y + height / 2;
+  
+  ctx.translate(centerX, centerY);
+  ctx.scale(1, cosAngle);
+  ctx.translate(-centerX, -centerY);
+  
+  ctx.beginPath();
+  ctx.rect(x, y, width, height / 2);
+  ctx.clip();
+  
+  ctx.fillStyle = theme.foreground;
+  ctx.fillRect(x, y, width, height / 2);
+  
+  const gradient = ctx.createLinearGradient(x, y, x, y + height / 2);
+  gradient.addColorStop(0, 'rgba(0, 0, 0, 0.3)');
+  gradient.addColorStop(1, 'rgba(0, 0, 0, 0)');
+  ctx.fillStyle = gradient;
+  ctx.fillRect(x, y, width, height / 2);
+  
+  ctx.fillStyle = theme.digit;
+  ctx.font = `bold ${height * 0.8}px Arial`;
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.fillText(digit, centerX, centerY);
+  
+  ctx.restore();
+}
+
+// 绘制翻页动画的下半部分（新数字向下翻）
+function drawFlippingBottom(x, y, width, height, digit, progress, theme) {
+  const angle = progress * Math.PI;
+  const cosAngle = Math.cos(angle);
+  
+  if (cosAngle >= 0) return;
+  
+  ctx.save();
+  
+  const centerX = x + width / 2;
+  const centerY = y + height / 2;
+  
+  ctx.translate(centerX, centerY);
+  ctx.scale(1, -cosAngle);
+  ctx.translate(-centerX, -centerY);
+  
+  ctx.beginPath();
+  ctx.rect(x, y + height / 2, width, height / 2);
+  ctx.clip();
+  
+  ctx.fillStyle = theme.foreground;
+  ctx.fillRect(x, y + height / 2, width, height / 2);
+  
+  const gradient = ctx.createLinearGradient(x, y + height / 2, x, y + height);
+  gradient.addColorStop(0, 'rgba(0, 0, 0, 0)');
+  gradient.addColorStop(1, 'rgba(0, 0, 0, 0.3)');
+  ctx.fillStyle = gradient;
+  ctx.fillRect(x, y + height / 2, width, height / 2);
+  
+  ctx.fillStyle = theme.digit;
+  ctx.font = `bold ${height * 0.8}px Arial`;
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.fillText(digit, centerX, centerY);
+  
+  ctx.restore();
+}
+
 // 绘制翻页数字
 function drawFlipDigit(x, y, width, height, digit, flipProgress = 0, oldDigit = null) {
   const theme = getCurrentTheme();
@@ -219,123 +333,33 @@ function drawFlipDigit(x, y, width, height, digit, flipProgress = 0, oldDigit = 
   
   // 如果没有翻页动画，直接绘制数字
   if (flipProgress === 0 || oldDigit === null) {
-    // 绘制上半部分
-    ctx.save();
-    ctx.beginPath();
-    ctx.rect(x, y, width, height / 2);
-    ctx.clip();
-    
-    ctx.fillStyle = theme.digit;
-    ctx.font = `bold ${height * 0.8}px Arial`;
-    ctx.textAlign = 'center';
-    ctx.textBaseline = 'middle';
-    ctx.fillText(digit, x + width / 2, y + height / 2);
-    
-    ctx.restore();
-    
-    // 绘制下半部分
-    ctx.save();
-    ctx.beginPath();
-    ctx.rect(x, y + height / 2, width, height / 2);
-    ctx.clip();
-    
-    ctx.fillStyle = theme.digit;
-    ctx.font = `bold ${height * 0.8}px Arial`;
-    ctx.textAlign = 'center';
-    ctx.textBaseline = 'middle';
-    ctx.fillText(digit, x + width / 2, y + height / 2);
-    
-    ctx.restore();
-    
+    drawTopHalf(x, y, width, height, digit, theme);
+    drawBottomHalf(x, y, width, height, digit, theme);
     return;
   }
   
-  // 翻页动画
-  // 上半部分显示旧数字（先绘制背景）
-  ctx.save();
-  ctx.beginPath();
-  ctx.rect(x, y, width, height / 2);
-  ctx.clip();
+  // 翻页动画逻辑：
+  // 1. 上半部分：显示新数字的上半部分（静态）
+  // 2. 下半部分：显示旧数字的下半部分（静态）
+  // 3. 翻页效果：
+  //    - 前半段：旧数字的上半部分向下翻
+  //    - 后半段：新数字的下半部分向下翻
   
-  ctx.fillStyle = theme.foreground;
-  ctx.fillRect(x, y, width, height / 2);
+  // 绘制静态的新数字上半部分
+  drawTopHalf(x, y, width, height, digit, theme);
   
-  ctx.fillStyle = theme.digit;
-  ctx.font = `bold ${height * 0.8}px Arial`;
-  ctx.textAlign = 'center';
-  ctx.textBaseline = 'middle';
-  ctx.fillText(oldDigit, x + width / 2, y + height / 2);
+  // 绘制静态的旧数字下半部分
+  drawBottomHalf(x, y, width, height, oldDigit, theme);
   
-  ctx.restore();
-  
-  // 下半部分显示新数字（先绘制背景）
-  ctx.save();
-  ctx.beginPath();
-  ctx.rect(x, y + height / 2, width, height / 2);
-  ctx.clip();
-  
-  ctx.fillStyle = theme.foreground;
-  ctx.fillRect(x, y + height / 2, width, height / 2);
-  
-  ctx.fillStyle = theme.digit;
-  ctx.font = `bold ${height * 0.8}px Arial`;
-  ctx.textAlign = 'center';
-  ctx.textBaseline = 'middle';
-  ctx.fillText(digit, x + width / 2, y + height / 2);
-  
-  ctx.restore();
-  
-  // 绘制翻页效果
+  // 绘制翻页动画
   if (flipProgress < 0.5) {
-    // 上半部分翻页
-    const flipHeight = height / 2 * (1 - flipProgress * 2);
-    const scaleY = 1 - flipProgress * 2;
-    
-    ctx.save();
-    ctx.translate(x + width / 2, y + height / 2);
-    ctx.scale(1, scaleY);
-    ctx.translate(-(x + width / 2), -(y + height / 2));
-    
-    // 绘制翻页的上半部分（旧数字）
-    ctx.beginPath();
-    ctx.rect(x, y, width, height / 2);
-    ctx.clip();
-    
-    ctx.fillStyle = theme.foreground;
-    ctx.fillRect(x, y, width, height / 2);
-    
-    ctx.fillStyle = theme.digit;
-    ctx.font = `bold ${height * 0.8}px Arial`;
-    ctx.textAlign = 'center';
-    ctx.textBaseline = 'middle';
-    ctx.fillText(oldDigit, x + width / 2, y + height / 2);
-    
-    ctx.restore();
+    // 前半段：旧数字的上半部分向下翻
+    const progress = flipProgress * 2;
+    drawFlippingTop(x, y, width, height, oldDigit, progress, theme);
   } else {
-    // 下半部分翻页
-    const flipProgress2 = (flipProgress - 0.5) * 2;
-    const scaleY = flipProgress2;
-    
-    ctx.save();
-    ctx.translate(x + width / 2, y + height / 2);
-    ctx.scale(1, scaleY);
-    ctx.translate(-(x + width / 2), -(y + height / 2));
-    
-    // 绘制翻页的下半部分（新数字）
-    ctx.beginPath();
-    ctx.rect(x, y + height / 2, width, height / 2);
-    ctx.clip();
-    
-    ctx.fillStyle = theme.foreground;
-    ctx.fillRect(x, y + height / 2, width, height / 2);
-    
-    ctx.fillStyle = theme.digit;
-    ctx.font = `bold ${height * 0.8}px Arial`;
-    ctx.textAlign = 'center';
-    ctx.textBaseline = 'middle';
-    ctx.fillText(digit, x + width / 2, y + height / 2);
-    
-    ctx.restore();
+    // 后半段：新数字的下半部分向下翻
+    const progress = (flipProgress - 0.5) * 2;
+    drawFlippingBottom(x, y, width, height, digit, progress, theme);
   }
 }
 
