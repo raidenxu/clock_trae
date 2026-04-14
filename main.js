@@ -234,6 +234,16 @@ function drawBottomHalf(x, y, width, height, digit, theme) {
   ctx.restore();
 }
 
+// 绘制中间分隔线（始终在最上层）
+function drawMiddleLine(x, y, width, height, theme) {
+  ctx.beginPath();
+  ctx.moveTo(x, y + height / 2);
+  ctx.lineTo(x + width, y + height / 2);
+  ctx.strokeStyle = theme.background;
+  ctx.lineWidth = 2;
+  ctx.stroke();
+}
+
 // 绘制翻页动画的上半部分（旧数字向下翻）
 function drawFlippingTop(x, y, width, height, digit, progress, theme) {
   const angle = progress * Math.PI;
@@ -323,44 +333,41 @@ function drawFlipDigit(x, y, width, height, digit, flipProgress = 0, oldDigit = 
   ctx.lineWidth = 2;
   ctx.strokeRect(x, y, width, height);
   
-  // 绘制中间分隔线
-  ctx.beginPath();
-  ctx.moveTo(x, y + height / 2);
-  ctx.lineTo(x + width, y + height / 2);
-  ctx.strokeStyle = theme.background;
-  ctx.lineWidth = 1;
-  ctx.stroke();
-  
   // 如果没有翻页动画，直接绘制数字
   if (flipProgress === 0 || oldDigit === null) {
     drawTopHalf(x, y, width, height, digit, theme);
     drawBottomHalf(x, y, width, height, digit, theme);
+    drawMiddleLine(x, y, width, height, theme);
     return;
   }
   
-  // 翻页动画逻辑：
-  // 1. 上半部分：显示新数字的上半部分（静态）
-  // 2. 下半部分：显示旧数字的下半部分（静态）
-  // 3. 翻页效果：
-  //    - 前半段：旧数字的上半部分向下翻
-  //    - 后半段：新数字的下半部分向下翻
+  // 翻页动画逻辑（正确的顺序）：
+  // 1. 底层：
+  //    - 上半部分：新数字的上半部分（静态，在旧数字翻走后显示）
+  //    - 下半部分：旧数字的下半部分（静态，被新数字逐渐遮盖）
+  // 2. 翻页层：
+  //    - 前半段（0-50%）：旧数字的上半部分向下翻
+  //    - 后半段（50-100%）：新数字的下半部分向下翻
   
-  // 绘制静态的新数字上半部分
+  // 绘制底层：新数字的上半部分
   drawTopHalf(x, y, width, height, digit, theme);
   
-  // 绘制静态的旧数字下半部分
+  // 绘制底层：旧数字的下半部分
   drawBottomHalf(x, y, width, height, oldDigit, theme);
   
   // 绘制翻页动画
   if (flipProgress < 0.5) {
-    // 前半段：旧数字的上半部分向下翻
+    // 前半段：旧数字的上半部分向下翻（覆盖在新数字上半部分之上）
     const progress = flipProgress * 2;
     drawFlippingTop(x, y, width, height, oldDigit, progress, theme);
   } else {
-    // 后半段：新数字的下半部分向下翻
+    // 后半段：新数字的下半部分向下翻（覆盖在旧数字下半部分之上）
     const progress = (flipProgress - 0.5) * 2;
     drawFlippingBottom(x, y, width, height, digit, progress, theme);
   }
+  
+  // 绘制中间分隔线（始终在最上层）
+  drawMiddleLine(x, y, width, height, theme);
 }
 
 // 绘制分隔符
