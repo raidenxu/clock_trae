@@ -292,7 +292,7 @@ function drawTopHalf(x, y, width, height, digit, theme) {
   
   ctx.save();
   ctx.beginPath();
-  // 上半部分圆角矩形
+  // 上半部分：顶部有圆角，底部（靠近转轴）没有圆角
   ctx.moveTo(x + radius, y);
   ctx.lineTo(x + width - radius, y);
   ctx.quadraticCurveTo(x + width, y, x + width, y + radius);
@@ -303,8 +303,23 @@ function drawTopHalf(x, y, width, height, digit, theme) {
   ctx.closePath();
   ctx.clip();
   
-  // 绘制渐变背景
-  drawGradientBackground(x, y, width, height / 2, radius, theme, true);
+  // 绘制渐变背景（使用顶部圆角，底部直角）
+  // 直接绘制而不是调用drawGradientBackground，因为底部需要直角
+  const gradient = ctx.createLinearGradient(x, y, x, y + height / 2);
+  gradient.addColorStop(0, lightenColor(theme.foreground, 10));
+  gradient.addColorStop(1, theme.foreground);
+  
+  ctx.fillStyle = gradient;
+  ctx.beginPath();
+  ctx.moveTo(x + radius, y);
+  ctx.lineTo(x + width - radius, y);
+  ctx.quadraticCurveTo(x + width, y, x + width, y + radius);
+  ctx.lineTo(x + width, y + height / 2);
+  ctx.lineTo(x, y + height / 2);
+  ctx.lineTo(x, y + radius);
+  ctx.quadraticCurveTo(x, y, x + radius, y);
+  ctx.closePath();
+  ctx.fill();
   
   // 添加高光效果
   const highlightGradient = ctx.createLinearGradient(x, y, x, y + height / 4);
@@ -329,7 +344,7 @@ function drawBottomHalf(x, y, width, height, digit, theme) {
   
   ctx.save();
   ctx.beginPath();
-  // 下半部分圆角矩形
+  // 下半部分：底部有圆角，顶部（靠近转轴）没有圆角
   ctx.moveTo(x, y + height / 2);
   ctx.lineTo(x + width, y + height / 2);
   ctx.lineTo(x + width, y + height - radius);
@@ -340,8 +355,23 @@ function drawBottomHalf(x, y, width, height, digit, theme) {
   ctx.closePath();
   ctx.clip();
   
-  // 绘制渐变背景
-  drawGradientBackground(x, y + height / 2, width, height / 2, radius, theme, false);
+  // 绘制渐变背景（使用底部圆角，顶部直角）
+  // 直接绘制而不是调用drawGradientBackground，因为顶部需要直角
+  const gradient = ctx.createLinearGradient(x, y + height / 2, x, y + height);
+  gradient.addColorStop(0, theme.foreground);
+  gradient.addColorStop(1, darkenColor(theme.foreground, 10));
+  
+  ctx.fillStyle = gradient;
+  ctx.beginPath();
+  ctx.moveTo(x, y + height / 2);
+  ctx.lineTo(x + width, y + height / 2);
+  ctx.lineTo(x + width, y + height - radius);
+  ctx.quadraticCurveTo(x + width, y + height, x + width - radius, y + height);
+  ctx.lineTo(x + radius, y + height);
+  ctx.quadraticCurveTo(x, y + height, x, y + height - radius);
+  ctx.lineTo(x, y + height / 2);
+  ctx.closePath();
+  ctx.fill();
   
   // 添加阴影效果
   const shadowGradient = ctx.createLinearGradient(x, y + height / 2, x, y + height);
@@ -383,31 +413,6 @@ function drawMiddleAxis(x, y, width, height, theme) {
   
   ctx.fillStyle = highlightGradient;
   ctx.fillRect(x, centerY - 1, width, 2);
-  
-  // 转轴两侧的圆形装饰（模拟真实转轴）
-  const axisRadius = Math.min(width, height) * 0.05;
-  
-  // 左侧转轴
-  ctx.fillStyle = 'rgba(0, 0, 0, 0.4)';
-  ctx.beginPath();
-  ctx.arc(x + axisRadius, centerY, axisRadius, 0, Math.PI * 2);
-  ctx.fill();
-  
-  ctx.fillStyle = 'rgba(255, 255, 255, 0.2)';
-  ctx.beginPath();
-  ctx.arc(x + axisRadius - 1, centerY - 1, axisRadius * 0.6, 0, Math.PI * 2);
-  ctx.fill();
-  
-  // 右侧转轴
-  ctx.fillStyle = 'rgba(0, 0, 0, 0.4)';
-  ctx.beginPath();
-  ctx.arc(x + width - axisRadius, centerY, axisRadius, 0, Math.PI * 2);
-  ctx.fill();
-  
-  ctx.fillStyle = 'rgba(255, 255, 255, 0.2)';
-  ctx.beginPath();
-  ctx.arc(x + width - axisRadius - 1, centerY - 1, axisRadius * 0.6, 0, Math.PI * 2);
-  ctx.fill();
   
   ctx.restore();
 }
@@ -671,30 +676,31 @@ function render() {
   const digitHeight = clockWidth * 0.3;
   const digitWidth = digitHeight * 0.6;
   const separatorSize = digitHeight * 0.3;
+  const cardGap = 3; // 两张卡片之间的间距
   
   // 计算位置
-  const totalWidth = digitWidth * 6 + separatorSize * 2;
+  const totalWidth = digitWidth * 6 + separatorSize * 2 + cardGap * 4;
   const startX = (width - totalWidth) / 2;
   const startY = (height - digitHeight) / 2;
   
   // 使用统一的方法绘制所有数字
   // 绘制小时
   drawDigit(startX, startY, digitWidth, digitHeight, 'hour1');
-  drawDigit(startX + digitWidth, startY, digitWidth, digitHeight, 'hour2');
+  drawDigit(startX + digitWidth + cardGap, startY, digitWidth, digitHeight, 'hour2');
   
   // 绘制分隔符
-  drawSeparator(startX + digitWidth * 2 + separatorSize / 2, startY + digitHeight / 2, separatorSize);
+  drawSeparator(startX + digitWidth * 2 + cardGap + separatorSize / 2, startY + digitHeight / 2, separatorSize);
   
   // 绘制分钟
-  drawDigit(startX + digitWidth * 2 + separatorSize, startY, digitWidth, digitHeight, 'minute1');
-  drawDigit(startX + digitWidth * 3 + separatorSize, startY, digitWidth, digitHeight, 'minute2');
+  drawDigit(startX + digitWidth * 2 + cardGap + separatorSize, startY, digitWidth, digitHeight, 'minute1');
+  drawDigit(startX + digitWidth * 3 + cardGap * 2 + separatorSize, startY, digitWidth, digitHeight, 'minute2');
   
   // 绘制分隔符
-  drawSeparator(startX + digitWidth * 4 + separatorSize * 1.5, startY + digitHeight / 2, separatorSize);
+  drawSeparator(startX + digitWidth * 4 + cardGap * 2 + separatorSize * 1.5, startY + digitHeight / 2, separatorSize);
   
   // 绘制秒钟
-  drawDigit(startX + digitWidth * 4 + separatorSize * 2, startY, digitWidth, digitHeight, 'second1');
-  drawDigit(startX + digitWidth * 5 + separatorSize * 2, startY, digitWidth, digitHeight, 'second2');
+  drawDigit(startX + digitWidth * 4 + cardGap * 2 + separatorSize * 2, startY, digitWidth, digitHeight, 'second1');
+  drawDigit(startX + digitWidth * 5 + cardGap * 3 + separatorSize * 2, startY, digitWidth, digitHeight, 'second2');
   
   // 继续渲染
   requestAnimationFrame(render);
