@@ -608,18 +608,62 @@ function drawFlipDigit(x, y, width, height, digit, flipProgress = 0, oldDigit = 
 // 绘制分隔符
 function drawSeparator(x, y, size) {
   const theme = getCurrentTheme();
+  const dotRadius = size / 4;
+  const dotSpacing = size / 2.5;
   
-  ctx.fillStyle = theme.separator;
+  // 绘制上圆点
+  drawSeparatorDot(x, y - dotSpacing, dotRadius, theme);
   
-  // 上圆点
+  // 绘制下圆点
+  drawSeparatorDot(x, y + dotSpacing, dotRadius, theme);
+}
+
+// 绘制单个分隔符圆点（带立体效果）
+function drawSeparatorDot(x, y, radius, theme) {
+  ctx.save();
+  
+  // 绘制阴影
+  ctx.shadowColor = 'rgba(0, 0, 0, 0.5)';
+  ctx.shadowBlur = radius * 0.5;
+  ctx.shadowOffsetX = radius * 0.2;
+  ctx.shadowOffsetY = radius * 0.3;
+  
+  // 绘制渐变背景
+  const gradient = ctx.createRadialGradient(
+    x - radius * 0.3, y - radius * 0.3, 0,
+    x, y, radius
+  );
+  gradient.addColorStop(0, lightenColor(theme.separator, 30));
+  gradient.addColorStop(0.5, theme.separator);
+  gradient.addColorStop(1, darkenColor(theme.separator, 20));
+  
+  ctx.fillStyle = gradient;
   ctx.beginPath();
-  ctx.arc(x, y - size / 3, size / 4, 0, Math.PI * 2);
+  ctx.arc(x, y, radius, 0, Math.PI * 2);
   ctx.fill();
   
-  // 下圆点
+  // 绘制高光
+  ctx.shadowColor = 'transparent';
+  const highlightGradient = ctx.createRadialGradient(
+    x - radius * 0.3, y - radius * 0.3, 0,
+    x - radius * 0.3, y - radius * 0.3, radius * 0.6
+  );
+  highlightGradient.addColorStop(0, 'rgba(255, 255, 255, 0.6)');
+  highlightGradient.addColorStop(1, 'rgba(255, 255, 255, 0)');
+  
+  ctx.fillStyle = highlightGradient;
   ctx.beginPath();
-  ctx.arc(x, y + size / 3, size / 4, 0, Math.PI * 2);
+  ctx.arc(x, y, radius, 0, Math.PI * 2);
   ctx.fill();
+  
+  // 绘制边框
+  ctx.strokeStyle = 'rgba(0, 0, 0, 0.2)';
+  ctx.lineWidth = radius * 0.1;
+  ctx.beginPath();
+  ctx.arc(x, y, radius, 0, Math.PI * 2);
+  ctx.stroke();
+  
+  ctx.restore();
 }
 
 // 统一绘制数字的方法
