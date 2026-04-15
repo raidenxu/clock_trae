@@ -197,16 +197,123 @@ function startFlip(digitKey, oldValue, newValue) {
   };
 }
 
+// 绘制带圆角的矩形
+function drawRoundedRect(x, y, width, height, radius) {
+  ctx.beginPath();
+  ctx.moveTo(x + radius, y);
+  ctx.lineTo(x + width - radius, y);
+  ctx.quadraticCurveTo(x + width, y, x + width, y + radius);
+  ctx.lineTo(x + width, y + height - radius);
+  ctx.quadraticCurveTo(x + width, y + height, x + width - radius, y + height);
+  ctx.lineTo(x + radius, y + height);
+  ctx.quadraticCurveTo(x, y + height, x, y + height - radius);
+  ctx.lineTo(x, y + radius);
+  ctx.quadraticCurveTo(x, y, x + radius, y);
+  ctx.closePath();
+}
+
+// 绘制卡片阴影效果
+function drawCardShadow(x, y, width, height, radius, intensity = 1) {
+  ctx.save();
+  
+  // 外层阴影
+  ctx.shadowColor = 'rgba(0, 0, 0, 0.4)';
+  ctx.shadowBlur = 15 * intensity;
+  ctx.shadowOffsetX = 5 * intensity;
+  ctx.shadowOffsetY = 8 * intensity;
+  
+  ctx.fillStyle = 'rgba(0, 0, 0, 0.1)';
+  drawRoundedRect(x, y, width, height, radius);
+  ctx.fill();
+  
+  ctx.restore();
+}
+
+// 绘制卡片立体边框
+function drawCardBorder(x, y, width, height, radius, theme) {
+  ctx.save();
+  
+  // 外边框
+  ctx.strokeStyle = 'rgba(0, 0, 0, 0.3)';
+  ctx.lineWidth = 2;
+  drawRoundedRect(x, y, width, height, radius);
+  ctx.stroke();
+  
+  // 内高光边框
+  ctx.strokeStyle = 'rgba(255, 255, 255, 0.15)';
+  ctx.lineWidth = 1;
+  drawRoundedRect(x + 1, y + 1, width - 2, height - 2, radius - 1);
+  ctx.stroke();
+  
+  ctx.restore();
+}
+
+// 绘制渐变背景
+function drawGradientBackground(x, y, width, height, radius, theme, isTop = true) {
+  const gradient = ctx.createLinearGradient(x, y, x, y + height);
+  
+  if (isTop) {
+    // 上半部分：稍微亮一点
+    gradient.addColorStop(0, lightenColor(theme.foreground, 10));
+    gradient.addColorStop(1, theme.foreground);
+  } else {
+    // 下半部分：稍微暗一点
+    gradient.addColorStop(0, theme.foreground);
+    gradient.addColorStop(1, darkenColor(theme.foreground, 10));
+  }
+  
+  ctx.fillStyle = gradient;
+  drawRoundedRect(x, y, width, height, radius);
+  ctx.fill();
+}
+
+// 颜色辅助函数
+function lightenColor(color, percent) {
+  const num = parseInt(color.replace('#', ''), 16);
+  const amt = Math.round(2.55 * percent);
+  const R = Math.min(255, (num >> 16) + amt);
+  const G = Math.min(255, ((num >> 8) & 0x00FF) + amt);
+  const B = Math.min(255, (num & 0x0000FF) + amt);
+  return `#${(0x1000000 + R * 0x10000 + G * 0x100 + B).toString(16).slice(1)}`;
+}
+
+function darkenColor(color, percent) {
+  const num = parseInt(color.replace('#', ''), 16);
+  const amt = Math.round(2.55 * percent);
+  const R = Math.max(0, (num >> 16) - amt);
+  const G = Math.max(0, ((num >> 8) & 0x00FF) - amt);
+  const B = Math.max(0, (num & 0x0000FF) - amt);
+  return `#${(0x1000000 + R * 0x10000 + G * 0x100 + B).toString(16).slice(1)}`;
+}
+
 // 绘制数字的上半部分
 function drawTopHalf(x, y, width, height, digit, theme) {
+  const radius = Math.min(width, height) * 0.1;
+  
   ctx.save();
   ctx.beginPath();
-  ctx.rect(x, y, width, height / 2);
+  // 上半部分圆角矩形
+  ctx.moveTo(x + radius, y);
+  ctx.lineTo(x + width - radius, y);
+  ctx.quadraticCurveTo(x + width, y, x + width, y + radius);
+  ctx.lineTo(x + width, y + height / 2);
+  ctx.lineTo(x, y + height / 2);
+  ctx.lineTo(x, y + radius);
+  ctx.quadraticCurveTo(x, y, x + radius, y);
+  ctx.closePath();
   ctx.clip();
   
-  ctx.fillStyle = theme.foreground;
-  ctx.fillRect(x, y, width, height / 2);
+  // 绘制渐变背景
+  drawGradientBackground(x, y, width, height / 2, radius, theme, true);
   
+  // 添加高光效果
+  const highlightGradient = ctx.createLinearGradient(x, y, x, y + height / 4);
+  highlightGradient.addColorStop(0, 'rgba(255, 255, 255, 0.15)');
+  highlightGradient.addColorStop(1, 'rgba(255, 255, 255, 0)');
+  ctx.fillStyle = highlightGradient;
+  ctx.fillRect(x, y, width, height / 4);
+  
+  // 绘制数字
   ctx.fillStyle = theme.digit;
   ctx.font = `bold ${height * 0.8}px Arial`;
   ctx.textAlign = 'center';
@@ -218,14 +325,32 @@ function drawTopHalf(x, y, width, height, digit, theme) {
 
 // 绘制数字的下半部分
 function drawBottomHalf(x, y, width, height, digit, theme) {
+  const radius = Math.min(width, height) * 0.1;
+  
   ctx.save();
   ctx.beginPath();
-  ctx.rect(x, y + height / 2, width, height / 2);
+  // 下半部分圆角矩形
+  ctx.moveTo(x, y + height / 2);
+  ctx.lineTo(x + width, y + height / 2);
+  ctx.lineTo(x + width, y + height - radius);
+  ctx.quadraticCurveTo(x + width, y + height, x + width - radius, y + height);
+  ctx.lineTo(x + radius, y + height);
+  ctx.quadraticCurveTo(x, y + height, x, y + height - radius);
+  ctx.lineTo(x, y + height / 2);
+  ctx.closePath();
   ctx.clip();
   
-  ctx.fillStyle = theme.foreground;
+  // 绘制渐变背景
+  drawGradientBackground(x, y + height / 2, width, height / 2, radius, theme, false);
+  
+  // 添加阴影效果
+  const shadowGradient = ctx.createLinearGradient(x, y + height / 2, x, y + height);
+  shadowGradient.addColorStop(0, 'rgba(0, 0, 0, 0)');
+  shadowGradient.addColorStop(1, 'rgba(0, 0, 0, 0.15)');
+  ctx.fillStyle = shadowGradient;
   ctx.fillRect(x, y + height / 2, width, height / 2);
   
+  // 绘制数字
   ctx.fillStyle = theme.digit;
   ctx.font = `bold ${height * 0.8}px Arial`;
   ctx.textAlign = 'center';
@@ -235,22 +360,62 @@ function drawBottomHalf(x, y, width, height, digit, theme) {
   ctx.restore();
 }
 
-// 绘制中间分隔线（始终在最上层）
-function drawMiddleLine(x, y, width, height, theme) {
+// 绘制中间转轴效果（更真实的卡片转轴）
+function drawMiddleAxis(x, y, width, height, theme) {
+  const centerY = y + height / 2;
+  
+  ctx.save();
+  
+  // 转轴凹槽效果
+  const grooveGradient = ctx.createLinearGradient(x, centerY - 3, x, centerY + 3);
+  grooveGradient.addColorStop(0, 'rgba(0, 0, 0, 0.3)');
+  grooveGradient.addColorStop(0.5, 'rgba(0, 0, 0, 0.1)');
+  grooveGradient.addColorStop(1, 'rgba(0, 0, 0, 0.3)');
+  
+  ctx.fillStyle = grooveGradient;
+  ctx.fillRect(x, centerY - 3, width, 6);
+  
+  // 转轴高光
+  const highlightGradient = ctx.createLinearGradient(x, centerY - 1, x, centerY + 1);
+  highlightGradient.addColorStop(0, 'rgba(255, 255, 255, 0.1)');
+  highlightGradient.addColorStop(0.5, 'rgba(255, 255, 255, 0.2)');
+  highlightGradient.addColorStop(1, 'rgba(255, 255, 255, 0.1)');
+  
+  ctx.fillStyle = highlightGradient;
+  ctx.fillRect(x, centerY - 1, width, 2);
+  
+  // 转轴两侧的圆形装饰（模拟真实转轴）
+  const axisRadius = Math.min(width, height) * 0.05;
+  
+  // 左侧转轴
+  ctx.fillStyle = 'rgba(0, 0, 0, 0.4)';
   ctx.beginPath();
-  ctx.moveTo(x, y + height / 2);
-  ctx.lineTo(x + width, y + height / 2);
-  ctx.strokeStyle = theme.background;
-  ctx.lineWidth = 2;
-  ctx.stroke();
+  ctx.arc(x + axisRadius, centerY, axisRadius, 0, Math.PI * 2);
+  ctx.fill();
+  
+  ctx.fillStyle = 'rgba(255, 255, 255, 0.2)';
+  ctx.beginPath();
+  ctx.arc(x + axisRadius - 1, centerY - 1, axisRadius * 0.6, 0, Math.PI * 2);
+  ctx.fill();
+  
+  // 右侧转轴
+  ctx.fillStyle = 'rgba(0, 0, 0, 0.4)';
+  ctx.beginPath();
+  ctx.arc(x + width - axisRadius, centerY, axisRadius, 0, Math.PI * 2);
+  ctx.fill();
+  
+  ctx.fillStyle = 'rgba(255, 255, 255, 0.2)';
+  ctx.beginPath();
+  ctx.arc(x + width - axisRadius - 1, centerY - 1, axisRadius * 0.6, 0, Math.PI * 2);
+  ctx.fill();
+  
+  ctx.restore();
 }
 
 // 绘制翻页动画的上半部分（旧数字向下翻）
 // 这是前半段动画：旧数字的上半部分沿中轴线下翻，逐渐消失
 function drawFlippingTopOld(x, y, width, height, digit, progress, theme) {
-  // progress: 0 -> 1，表示动画进度
-  // 前半段动画：旧数字上半部分向下翻，从完全显示到完全消失
-  
+  const radius = Math.min(width, height) * 0.1;
   const angle = progress * Math.PI / 2; // 0 -> 90度
   const cosAngle = Math.cos(angle);
   
@@ -262,27 +427,44 @@ function drawFlippingTopOld(x, y, width, height, digit, progress, theme) {
   const centerX = x + width / 2;
   const centerY = y + height / 2;
   
+  // 透视参数
+  const perspective = height * 2;
+  const scale = perspective / (perspective + height * (1 - cosAngle) * 0.5);
+  
   // 以中间轴线为中心进行3D旋转效果
-  // 使用scale来模拟透视效果
   ctx.translate(centerX, centerY);
-  ctx.scale(1, cosAngle);
+  ctx.scale(scale, cosAngle * scale);
   ctx.translate(-centerX, -centerY);
   
-  // 只绘制上半部分
+  // 只绘制上半部分（带圆角）
   ctx.beginPath();
-  ctx.rect(x, y, width, height / 2);
+  ctx.moveTo(x + radius, y);
+  ctx.lineTo(x + width - radius, y);
+  ctx.quadraticCurveTo(x + width, y, x + width, y + radius);
+  ctx.lineTo(x + width, y + height / 2);
+  ctx.lineTo(x, y + height / 2);
+  ctx.lineTo(x, y + radius);
+  ctx.quadraticCurveTo(x, y, x + radius, y);
+  ctx.closePath();
   ctx.clip();
   
-  // 绘制背景
-  ctx.fillStyle = theme.foreground;
+  // 绘制渐变背景
+  drawGradientBackground(x, y, width, height / 2, radius, theme, true);
+  
+  // 添加动态阴影效果，模拟3D翻页时的光照变化
+  const shadowIntensity = progress * 0.6;
+  const shadowGradient = ctx.createLinearGradient(x, y, x, y + height / 2);
+  shadowGradient.addColorStop(0, `rgba(0, 0, 0, ${shadowIntensity})`);
+  shadowGradient.addColorStop(1, `rgba(0, 0, 0, ${shadowIntensity * 0.3})`);
+  ctx.fillStyle = shadowGradient;
   ctx.fillRect(x, y, width, height / 2);
   
-  // 添加阴影效果，模拟3D翻页
-  const gradient = ctx.createLinearGradient(x, y, x, y + height / 2);
-  gradient.addColorStop(0, 'rgba(0, 0, 0, 0.3)');
-  gradient.addColorStop(1, 'rgba(0, 0, 0, 0)');
-  ctx.fillStyle = gradient;
-  ctx.fillRect(x, y, width, height / 2);
+  // 添加边缘高光（模拟翻页时的边缘反光）
+  const edgeHighlight = ctx.createLinearGradient(x, y + height / 2 - 5, x, y + height / 2);
+  edgeHighlight.addColorStop(0, 'rgba(255, 255, 255, 0)');
+  edgeHighlight.addColorStop(1, `rgba(255, 255, 255, ${0.3 * (1 - progress)})`);
+  ctx.fillStyle = edgeHighlight;
+  ctx.fillRect(x, y + height / 2 - 5, width, 5);
   
   // 绘制数字
   ctx.fillStyle = theme.digit;
@@ -297,9 +479,7 @@ function drawFlippingTopOld(x, y, width, height, digit, progress, theme) {
 // 绘制翻页动画的下半部分（新数字向下翻）
 // 这是后半段动画：新数字的下半部分沿中轴线下翻，逐渐显示
 function drawFlippingBottomNew(x, y, width, height, digit, progress, theme) {
-  // progress: 0 -> 1，表示动画进度
-  // 后半段动画：新数字下半部分向下翻，从完全隐藏到完全显示
-  
+  const radius = Math.min(width, height) * 0.1;
   const angle = progress * Math.PI / 2; // 0 -> 90度
   const cosAngle = Math.cos(angle);
   const scaleY = 1 - cosAngle; // 从0到1
@@ -312,26 +492,44 @@ function drawFlippingBottomNew(x, y, width, height, digit, progress, theme) {
   const centerX = x + width / 2;
   const centerY = y + height / 2;
   
+  // 透视参数
+  const perspective = height * 2;
+  const scale = perspective / (perspective + height * cosAngle * 0.5);
+  
   // 以中间轴线为中心进行3D旋转效果
   ctx.translate(centerX, centerY);
-  ctx.scale(1, scaleY);
+  ctx.scale(scale, scaleY * scale);
   ctx.translate(-centerX, -centerY);
   
-  // 只绘制下半部分
+  // 只绘制下半部分（带圆角）
   ctx.beginPath();
-  ctx.rect(x, y + height / 2, width, height / 2);
+  ctx.moveTo(x, y + height / 2);
+  ctx.lineTo(x + width, y + height / 2);
+  ctx.lineTo(x + width, y + height - radius);
+  ctx.quadraticCurveTo(x + width, y + height, x + width - radius, y + height);
+  ctx.lineTo(x + radius, y + height);
+  ctx.quadraticCurveTo(x, y + height, x, y + height - radius);
+  ctx.lineTo(x, y + height / 2);
+  ctx.closePath();
   ctx.clip();
   
-  // 绘制背景
-  ctx.fillStyle = theme.foreground;
+  // 绘制渐变背景
+  drawGradientBackground(x, y + height / 2, width, height / 2, radius, theme, false);
+  
+  // 添加动态阴影效果，模拟3D翻页时的光照变化
+  const shadowIntensity = (1 - progress) * 0.5;
+  const shadowGradient = ctx.createLinearGradient(x, y + height / 2, x, y + height);
+  shadowGradient.addColorStop(0, `rgba(0, 0, 0, ${shadowIntensity})`);
+  shadowGradient.addColorStop(1, `rgba(0, 0, 0, ${shadowIntensity + 0.2})`);
+  ctx.fillStyle = shadowGradient;
   ctx.fillRect(x, y + height / 2, width, height / 2);
   
-  // 添加阴影效果，模拟3D翻页
-  const gradient = ctx.createLinearGradient(x, y + height / 2, x, y + height);
-  gradient.addColorStop(0, 'rgba(0, 0, 0, 0.2)');
-  gradient.addColorStop(1, 'rgba(0, 0, 0, 0.4)');
-  ctx.fillStyle = gradient;
-  ctx.fillRect(x, y + height / 2, width, height / 2);
+  // 添加边缘高光（模拟翻页时的边缘反光）
+  const edgeHighlight = ctx.createLinearGradient(x, y + height / 2, x, y + height / 2 + 5);
+  edgeHighlight.addColorStop(0, `rgba(255, 255, 255, ${0.3 * progress})`);
+  edgeHighlight.addColorStop(1, 'rgba(255, 255, 255, 0)');
+  ctx.fillStyle = edgeHighlight;
+  ctx.fillRect(x, y + height / 2, width, 5);
   
   // 绘制数字
   ctx.fillStyle = theme.digit;
@@ -346,21 +544,22 @@ function drawFlippingBottomNew(x, y, width, height, digit, progress, theme) {
 // 绘制翻页数字
 function drawFlipDigit(x, y, width, height, digit, flipProgress = 0, oldDigit = null) {
   const theme = getCurrentTheme();
+  const radius = Math.min(width, height) * 0.1;
   
-  // 绘制背景
-  ctx.fillStyle = theme.foreground;
-  ctx.fillRect(x, y, width, height);
+  // 绘制卡片阴影（立体效果）
+  drawCardShadow(x, y, width, height, radius);
   
-  // 绘制边框
-  ctx.strokeStyle = theme.background;
-  ctx.lineWidth = 2;
-  ctx.strokeRect(x, y, width, height);
+  // 绘制背景（带圆角和渐变）
+  drawGradientBackground(x, y, width, height, radius, theme, true);
+  
+  // 绘制立体边框
+  drawCardBorder(x, y, width, height, radius, theme);
   
   // 如果没有翻页动画，直接绘制数字
   if (flipProgress === 0 || oldDigit === null) {
     drawTopHalf(x, y, width, height, digit, theme);
     drawBottomHalf(x, y, width, height, digit, theme);
-    drawMiddleLine(x, y, width, height, theme);
+    drawMiddleAxis(x, y, width, height, theme);
     return;
   }
   
@@ -397,8 +596,8 @@ function drawFlipDigit(x, y, width, height, digit, flipProgress = 0, oldDigit = 
     drawFlippingBottomNew(x, y, width, height, digit, progress, theme);
   }
   
-  // 绘制中间分隔线（始终在最上层）
-  drawMiddleLine(x, y, width, height, theme);
+  // 绘制中间转轴（始终在最上层）
+  drawMiddleAxis(x, y, width, height, theme);
 }
 
 // 绘制分隔符
