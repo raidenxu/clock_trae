@@ -50,6 +50,9 @@ const separatorColorInput = document.getElementById('separatorColor');
 const flipDuration = 300; // 翻页动画持续时间（毫秒）
 let flippingDigits = {}; // 正在翻页的数字
 
+// 当前显示的时间（统一管理）
+let currentDisplayTime = getCurrentTime();
+
 // 初始化
 function init() {
   resizeCanvas();
@@ -146,42 +149,40 @@ function getCurrentTime() {
   return { hours, minutes, seconds };
 }
 
-// 上一次的时间
-let lastTime = getCurrentTime();
-
-// 更新时间
+// 统一更新时间显示的方法
 function updateTime() {
-  const currentTime = getCurrentTime();
+  const newTime = getCurrentTime();
   
   // 检查哪些数字需要翻页
-  if (currentTime.hours !== lastTime.hours) {
-    if (currentTime.hours[0] !== lastTime.hours[0]) {
-      startFlip('hour1', lastTime.hours[0], currentTime.hours[0]);
+  if (newTime.hours !== currentDisplayTime.hours) {
+    if (newTime.hours[0] !== currentDisplayTime.hours[0]) {
+      startFlip('hour1', currentDisplayTime.hours[0], newTime.hours[0]);
     }
-    if (currentTime.hours[1] !== lastTime.hours[1]) {
-      startFlip('hour2', lastTime.hours[1], currentTime.hours[1]);
-    }
-  }
-  
-  if (currentTime.minutes !== lastTime.minutes) {
-    if (currentTime.minutes[0] !== lastTime.minutes[0]) {
-      startFlip('minute1', lastTime.minutes[0], currentTime.minutes[0]);
-    }
-    if (currentTime.minutes[1] !== lastTime.minutes[1]) {
-      startFlip('minute2', lastTime.minutes[1], currentTime.minutes[1]);
+    if (newTime.hours[1] !== currentDisplayTime.hours[1]) {
+      startFlip('hour2', currentDisplayTime.hours[1], newTime.hours[1]);
     }
   }
   
-  if (currentTime.seconds !== lastTime.seconds) {
-    if (currentTime.seconds[0] !== lastTime.seconds[0]) {
-      startFlip('second1', lastTime.seconds[0], currentTime.seconds[0]);
+  if (newTime.minutes !== currentDisplayTime.minutes) {
+    if (newTime.minutes[0] !== currentDisplayTime.minutes[0]) {
+      startFlip('minute1', currentDisplayTime.minutes[0], newTime.minutes[0]);
     }
-    if (currentTime.seconds[1] !== lastTime.seconds[1]) {
-      startFlip('second2', lastTime.seconds[1], currentTime.seconds[1]);
+    if (newTime.minutes[1] !== currentDisplayTime.minutes[1]) {
+      startFlip('minute2', currentDisplayTime.minutes[1], newTime.minutes[1]);
     }
   }
   
-  lastTime = currentTime;
+  if (newTime.seconds !== currentDisplayTime.seconds) {
+    if (newTime.seconds[0] !== currentDisplayTime.seconds[0]) {
+      startFlip('second1', currentDisplayTime.seconds[0], newTime.seconds[0]);
+    }
+    if (newTime.seconds[1] !== currentDisplayTime.seconds[1]) {
+      startFlip('second2', currentDisplayTime.seconds[1], newTime.seconds[1]);
+    }
+  }
+  
+  // 更新当前显示的时间
+  currentDisplayTime = newTime;
   
   // 每秒更新一次时间
   setTimeout(updateTime, 1000);
@@ -245,10 +246,15 @@ function drawMiddleLine(x, y, width, height, theme) {
 }
 
 // 绘制翻页动画的上半部分（旧数字向下翻）
+// 这是前半段动画：旧数字的上半部分沿中轴线下翻，逐渐消失
 function drawFlippingTopOld(x, y, width, height, digit, progress, theme) {
-  const angle = progress * Math.PI / 2;
+  // progress: 0 -> 1，表示动画进度
+  // 前半段动画：旧数字上半部分向下翻，从完全显示到完全消失
+  
+  const angle = progress * Math.PI / 2; // 0 -> 90度
   const cosAngle = Math.cos(angle);
   
+  // 当角度超过90度时，不再显示
   if (cosAngle <= 0) return;
   
   ctx.save();
@@ -256,62 +262,29 @@ function drawFlippingTopOld(x, y, width, height, digit, progress, theme) {
   const centerX = x + width / 2;
   const centerY = y + height / 2;
   
+  // 以中间轴线为中心进行3D旋转效果
+  // 使用scale来模拟透视效果
   ctx.translate(centerX, centerY);
   ctx.scale(1, cosAngle);
   ctx.translate(-centerX, -centerY);
   
+  // 只绘制上半部分
   ctx.beginPath();
   ctx.rect(x, y, width, height / 2);
   ctx.clip();
   
+  // 绘制背景
   ctx.fillStyle = theme.foreground;
   ctx.fillRect(x, y, width, height / 2);
   
+  // 添加阴影效果，模拟3D翻页
   const gradient = ctx.createLinearGradient(x, y, x, y + height / 2);
   gradient.addColorStop(0, 'rgba(0, 0, 0, 0.3)');
   gradient.addColorStop(1, 'rgba(0, 0, 0, 0)');
   ctx.fillStyle = gradient;
   ctx.fillRect(x, y, width, height / 2);
   
-  ctx.fillStyle = theme.digit;
-  ctx.font = `bold ${height * 0.8}px Arial`;
-  ctx.textAlign = 'center';
-  ctx.textBaseline = 'middle';
-  ctx.fillText(digit, centerX, centerY);
-  
-  ctx.restore();
-}
-
-// 绘制翻页动画的上半部分（新数字向上显示）
-function drawFlippingTopNew(x, y, width, height, digit, progress, theme) {
-  const angle = progress * Math.PI / 2;
-  const cosAngle = Math.cos(angle);
-  const scaleY = 1 - cosAngle;
-  
-  if (scaleY <= 0) return;
-  
-  ctx.save();
-  
-  const centerX = x + width / 2;
-  const centerY = y + height / 2;
-  
-  ctx.translate(centerX, centerY);
-  ctx.scale(1, scaleY);
-  ctx.translate(-centerX, -centerY);
-  
-  ctx.beginPath();
-  ctx.rect(x, y, width, height / 2);
-  ctx.clip();
-  
-  ctx.fillStyle = theme.foreground;
-  ctx.fillRect(x, y, width, height / 2);
-  
-  const gradient = ctx.createLinearGradient(x, y, x, y + height / 2);
-  gradient.addColorStop(0, 'rgba(0, 0, 0, 0)');
-  gradient.addColorStop(1, 'rgba(0, 0, 0, 0.2)');
-  ctx.fillStyle = gradient;
-  ctx.fillRect(x, y, width, height / 2);
-  
+  // 绘制数字
   ctx.fillStyle = theme.digit;
   ctx.font = `bold ${height * 0.8}px Arial`;
   ctx.textAlign = 'center';
@@ -322,11 +295,16 @@ function drawFlippingTopNew(x, y, width, height, digit, progress, theme) {
 }
 
 // 绘制翻页动画的下半部分（新数字向下翻）
+// 这是后半段动画：新数字的下半部分沿中轴线下翻，逐渐显示
 function drawFlippingBottomNew(x, y, width, height, digit, progress, theme) {
-  const angle = progress * Math.PI / 2;
-  const cosAngle = Math.cos(angle);
-  const scaleY = 1 - cosAngle;
+  // progress: 0 -> 1，表示动画进度
+  // 后半段动画：新数字下半部分向下翻，从完全隐藏到完全显示
   
+  const angle = progress * Math.PI / 2; // 0 -> 90度
+  const cosAngle = Math.cos(angle);
+  const scaleY = 1 - cosAngle; // 从0到1
+  
+  // 当进度为0时，不显示
   if (scaleY <= 0) return;
   
   ctx.save();
@@ -334,23 +312,28 @@ function drawFlippingBottomNew(x, y, width, height, digit, progress, theme) {
   const centerX = x + width / 2;
   const centerY = y + height / 2;
   
+  // 以中间轴线为中心进行3D旋转效果
   ctx.translate(centerX, centerY);
   ctx.scale(1, scaleY);
   ctx.translate(-centerX, -centerY);
   
+  // 只绘制下半部分
   ctx.beginPath();
   ctx.rect(x, y + height / 2, width, height / 2);
   ctx.clip();
   
+  // 绘制背景
   ctx.fillStyle = theme.foreground;
   ctx.fillRect(x, y + height / 2, width, height / 2);
   
+  // 添加阴影效果，模拟3D翻页
   const gradient = ctx.createLinearGradient(x, y + height / 2, x, y + height);
   gradient.addColorStop(0, 'rgba(0, 0, 0, 0.2)');
   gradient.addColorStop(1, 'rgba(0, 0, 0, 0.4)');
   ctx.fillStyle = gradient;
   ctx.fillRect(x, y + height / 2, width, height / 2);
   
+  // 绘制数字
   ctx.fillStyle = theme.digit;
   ctx.font = `bold ${height * 0.8}px Arial`;
   ctx.textAlign = 'center';
@@ -381,39 +364,36 @@ function drawFlipDigit(x, y, width, height, digit, flipProgress = 0, oldDigit = 
     return;
   }
   
-  // 翻页动画逻辑（正确的顺序）：
-  // 1. 底层：
-  //    - 上半部分：空（新数字的上半部分会逐渐显示）
-  //    - 下半部分：旧数字的下半部分（静态，被新数字逐渐遮盖）
-  // 2. 翻页层：
-  //    - 前半段（0-50%）：
-  //      * 旧数字的上半部分向下翻（scaleY从1到0）
-  //      * 新数字的上半部分从中间轴线向上逐渐显示（scaleY从0到1）
-  //    - 后半段（50-100%）：
-  //      * 新数字的上半部分完全显示
-  //      * 新数字的下半部分从中间轴线向下逐渐显示（scaleY从0到1）
+  // 真实卡片下翻效果逻辑：
+  // 1. 起始状态：显示完整的旧数字
+  // 2. 前半段（0-50%）：
+  //    - 底层：新数字的上半部分（静态，逐渐露出）
+  //    - 底层：旧数字的下半部分（静态，逐渐被遮盖）
+  //    - 翻页层：旧数字的上半部分沿中轴线下翻，逐渐消失
+  // 3. 后半段（50-100%）：
+  //    - 底层：新数字的上半部分（完全显示）
+  //    - 翻页层：新数字的下半部分沿中轴线下翻，逐渐显示
+  //    - 底层：旧数字的下半部分（逐渐被遮盖）
+  // 4. 结束状态：显示完整的新数字
   
-  // 绘制底层：旧数字的下半部分（始终显示，直到被新数字遮盖）
+  // 绘制底层：新数字的上半部分（始终在底层，前半段逐渐露出）
+  drawTopHalf(x, y, width, height, digit, theme);
+  
+  // 绘制底层：旧数字的下半部分（始终在底层，后半段逐渐被遮盖）
   drawBottomHalf(x, y, width, height, oldDigit, theme);
   
   // 绘制翻页动画
   if (flipProgress < 0.5) {
-    // 前半段（0-50%）
-    const progress = flipProgress * 2;
+    // 前半段（0-50%）：旧数字的上半部分向下翻，逐渐消失
+    const progress = flipProgress * 2; // 0 -> 1
     
-    // 先绘制新数字的上半部分（从中间向上逐渐显示）
-    drawFlippingTopNew(x, y, width, height, digit, progress, theme);
-    
-    // 再绘制旧数字的上半部分（向下翻，逐渐消失）
+    // 绘制旧数字的上半部分（向下翻，逐渐消失）
     drawFlippingTopOld(x, y, width, height, oldDigit, progress, theme);
   } else {
-    // 后半段（50-100%）
-    const progress = (flipProgress - 0.5) * 2;
+    // 后半段（50-100%）：新数字的下半部分向下翻，逐渐显示
+    const progress = (flipProgress - 0.5) * 2; // 0 -> 1
     
-    // 新数字的上半部分完全显示
-    drawTopHalf(x, y, width, height, digit, theme);
-    
-    // 新数字的下半部分从中间向下逐渐显示
+    // 绘制新数字的下半部分（向下翻，逐渐显示）
     drawFlippingBottomNew(x, y, width, height, digit, progress, theme);
   }
   
@@ -438,6 +418,45 @@ function drawSeparator(x, y, size) {
   ctx.fill();
 }
 
+// 统一绘制数字的方法
+function drawDigit(x, y, width, height, digitKey) {
+  const flipInfo = flippingDigits[digitKey];
+  
+  if (flipInfo) {
+    const progress = Math.min(1, (Date.now() - flipInfo.startTime) / flipDuration);
+    drawFlipDigit(x, y, width, height, flipInfo.newValue, progress, flipInfo.oldValue);
+    if (progress >= 1) {
+      delete flippingDigits[digitKey];
+    }
+  } else {
+    // 根据digitKey获取当前显示的数字
+    let digit;
+    switch (digitKey) {
+      case 'hour1':
+        digit = currentDisplayTime.hours[0];
+        break;
+      case 'hour2':
+        digit = currentDisplayTime.hours[1];
+        break;
+      case 'minute1':
+        digit = currentDisplayTime.minutes[0];
+        break;
+      case 'minute2':
+        digit = currentDisplayTime.minutes[1];
+        break;
+      case 'second1':
+        digit = currentDisplayTime.seconds[0];
+        break;
+      case 'second2':
+        digit = currentDisplayTime.seconds[1];
+        break;
+      default:
+        digit = '0';
+    }
+    drawFlipDigit(x, y, width, height, digit);
+  }
+}
+
 // 渲染函数
 function render() {
   const theme = getCurrentTheme();
@@ -459,86 +478,24 @@ function render() {
   const startX = (width - totalWidth) / 2;
   const startY = (height - digitHeight) / 2;
   
-  // 获取当前时间
-  const currentTime = getCurrentTime();
-  
+  // 使用统一的方法绘制所有数字
   // 绘制小时
-  const hour1Flip = flippingDigits.hour1;
-  const hour2Flip = flippingDigits.hour2;
-  
-  if (hour1Flip) {
-    const progress = Math.min(1, (Date.now() - hour1Flip.startTime) / flipDuration);
-    drawFlipDigit(startX, startY, digitWidth, digitHeight, currentTime.hours[0], progress, hour1Flip.oldValue);
-    if (progress >= 1) {
-      delete flippingDigits.hour1;
-    }
-  } else {
-    drawFlipDigit(startX, startY, digitWidth, digitHeight, currentTime.hours[0]);
-  }
-  
-  if (hour2Flip) {
-    const progress = Math.min(1, (Date.now() - hour2Flip.startTime) / flipDuration);
-    drawFlipDigit(startX + digitWidth, startY, digitWidth, digitHeight, currentTime.hours[1], progress, hour2Flip.oldValue);
-    if (progress >= 1) {
-      delete flippingDigits.hour2;
-    }
-  } else {
-    drawFlipDigit(startX + digitWidth, startY, digitWidth, digitHeight, currentTime.hours[1]);
-  }
+  drawDigit(startX, startY, digitWidth, digitHeight, 'hour1');
+  drawDigit(startX + digitWidth, startY, digitWidth, digitHeight, 'hour2');
   
   // 绘制分隔符
   drawSeparator(startX + digitWidth * 2 + separatorSize / 2, startY + digitHeight / 2, separatorSize);
   
   // 绘制分钟
-  const minute1Flip = flippingDigits.minute1;
-  const minute2Flip = flippingDigits.minute2;
-  
-  if (minute1Flip) {
-    const progress = Math.min(1, (Date.now() - minute1Flip.startTime) / flipDuration);
-    drawFlipDigit(startX + digitWidth * 2 + separatorSize, startY, digitWidth, digitHeight, currentTime.minutes[0], progress, minute1Flip.oldValue);
-    if (progress >= 1) {
-      delete flippingDigits.minute1;
-    }
-  } else {
-    drawFlipDigit(startX + digitWidth * 2 + separatorSize, startY, digitWidth, digitHeight, currentTime.minutes[0]);
-  }
-  
-  if (minute2Flip) {
-    const progress = Math.min(1, (Date.now() - minute2Flip.startTime) / flipDuration);
-    drawFlipDigit(startX + digitWidth * 3 + separatorSize, startY, digitWidth, digitHeight, currentTime.minutes[1], progress, minute2Flip.oldValue);
-    if (progress >= 1) {
-      delete flippingDigits.minute2;
-    }
-  } else {
-    drawFlipDigit(startX + digitWidth * 3 + separatorSize, startY, digitWidth, digitHeight, currentTime.minutes[1]);
-  }
+  drawDigit(startX + digitWidth * 2 + separatorSize, startY, digitWidth, digitHeight, 'minute1');
+  drawDigit(startX + digitWidth * 3 + separatorSize, startY, digitWidth, digitHeight, 'minute2');
   
   // 绘制分隔符
   drawSeparator(startX + digitWidth * 4 + separatorSize * 1.5, startY + digitHeight / 2, separatorSize);
   
   // 绘制秒钟
-  const second1Flip = flippingDigits.second1;
-  const second2Flip = flippingDigits.second2;
-  
-  if (second1Flip) {
-    const progress = Math.min(1, (Date.now() - second1Flip.startTime) / flipDuration);
-    drawFlipDigit(startX + digitWidth * 4 + separatorSize * 2, startY, digitWidth, digitHeight, currentTime.seconds[0], progress, second1Flip.oldValue);
-    if (progress >= 1) {
-      delete flippingDigits.second1;
-    }
-  } else {
-    drawFlipDigit(startX + digitWidth * 4 + separatorSize * 2, startY, digitWidth, digitHeight, currentTime.seconds[0]);
-  }
-  
-  if (second2Flip) {
-    const progress = Math.min(1, (Date.now() - second2Flip.startTime) / flipDuration);
-    drawFlipDigit(startX + digitWidth * 5 + separatorSize * 2, startY, digitWidth, digitHeight, currentTime.seconds[1], progress, second2Flip.oldValue);
-    if (progress >= 1) {
-      delete flippingDigits.second2;
-    }
-  } else {
-    drawFlipDigit(startX + digitWidth * 5 + separatorSize * 2, startY, digitWidth, digitHeight, currentTime.seconds[1]);
-  }
+  drawDigit(startX + digitWidth * 4 + separatorSize * 2, startY, digitWidth, digitHeight, 'second1');
+  drawDigit(startX + digitWidth * 5 + separatorSize * 2, startY, digitWidth, digitHeight, 'second2');
   
   // 继续渲染
   requestAnimationFrame(render);
