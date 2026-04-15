@@ -51,7 +51,7 @@ pnpm preview
 
 ## 项目结构
 
-```
+```bash
 ├── index.html          # 主HTML文件
 ├── main.js             # 主要JavaScript逻辑
 ├── style.css           # 样式文件

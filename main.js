@@ -676,7 +676,7 @@ function render() {
   const digitHeight = clockWidth * 0.3;
   const digitWidth = digitHeight * 0.6;
   const separatorSize = digitHeight * 0.3;
-  const cardGap = 3; // 两张卡片之间的间距
+  const cardGap = 1; // 两张卡片之间的间距
   
   // 计算位置
   const totalWidth = digitWidth * 6 + separatorSize * 2 + cardGap * 4;
