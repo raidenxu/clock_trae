@@ -618,37 +618,31 @@ function drawSeparator(x, y, size) {
   drawSeparatorDot(x, y + dotSpacing, dotRadius, theme);
 }
 
-// 绘制单个分隔符圆点（带立体效果）
+// 绘制单个分隔符圆点（扁平凸起效果）
 function drawSeparatorDot(x, y, radius, theme) {
   ctx.save();
   
-  // 绘制阴影
-  ctx.shadowColor = 'rgba(0, 0, 0, 0.5)';
-  ctx.shadowBlur = radius * 0.5;
-  ctx.shadowOffsetX = radius * 0.2;
-  ctx.shadowOffsetY = radius * 0.3;
+  // 绘制底部阴影（模拟厚度）
+  ctx.shadowColor = 'rgba(0, 0, 0, 0.4)';
+  ctx.shadowBlur = radius * 0.3;
+  ctx.shadowOffsetX = 0;
+  ctx.shadowOffsetY = radius * 0.15;
   
-  // 绘制渐变背景
-  const gradient = ctx.createRadialGradient(
-    x - radius * 0.3, y - radius * 0.3, 0,
-    x, y, radius
-  );
-  gradient.addColorStop(0, lightenColor(theme.separator, 30));
+  // 绘制扁平凸起的主体
+  const gradient = ctx.createLinearGradient(x, y - radius, x, y + radius);
+  gradient.addColorStop(0, lightenColor(theme.separator, 15));
   gradient.addColorStop(0.5, theme.separator);
-  gradient.addColorStop(1, darkenColor(theme.separator, 20));
+  gradient.addColorStop(1, darkenColor(theme.separator, 10));
   
   ctx.fillStyle = gradient;
   ctx.beginPath();
   ctx.arc(x, y, radius, 0, Math.PI * 2);
   ctx.fill();
   
-  // 绘制高光
+  // 绘制顶部高光（扁平效果）
   ctx.shadowColor = 'transparent';
-  const highlightGradient = ctx.createRadialGradient(
-    x - radius * 0.3, y - radius * 0.3, 0,
-    x - radius * 0.3, y - radius * 0.3, radius * 0.6
-  );
-  highlightGradient.addColorStop(0, 'rgba(255, 255, 255, 0.6)');
+  const highlightGradient = ctx.createLinearGradient(x, y - radius, x, y);
+  highlightGradient.addColorStop(0, 'rgba(255, 255, 255, 0.25)');
   highlightGradient.addColorStop(1, 'rgba(255, 255, 255, 0)');
   
   ctx.fillStyle = highlightGradient;
@@ -656,9 +650,16 @@ function drawSeparatorDot(x, y, radius, theme) {
   ctx.arc(x, y, radius, 0, Math.PI * 2);
   ctx.fill();
   
-  // 绘制边框
-  ctx.strokeStyle = 'rgba(0, 0, 0, 0.2)';
-  ctx.lineWidth = radius * 0.1;
+  // 绘制内边框（增强扁平感）
+  ctx.strokeStyle = 'rgba(255, 255, 255, 0.15)';
+  ctx.lineWidth = radius * 0.08;
+  ctx.beginPath();
+  ctx.arc(x, y, radius - radius * 0.08, 0, Math.PI * 2);
+  ctx.stroke();
+  
+  // 绘制外边框
+  ctx.strokeStyle = 'rgba(0, 0, 0, 0.15)';
+  ctx.lineWidth = radius * 0.08;
   ctx.beginPath();
   ctx.arc(x, y, radius, 0, Math.PI * 2);
   ctx.stroke();
