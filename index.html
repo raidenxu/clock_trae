@@ -9,34 +9,53 @@
 <body>
   <div class="container">
     <canvas id="clockCanvas"></canvas>
-    <div class="controls">
-      <div class="theme-selector">
-        <label>主题:</label>
-        <select id="themeSelect">
-          <option value="classic">经典</option>
-          <option value="dark">暗黑</option>
-          <option value="light">明亮</option>
-          <option value="ocean">海洋</option>
-          <option value="sunset">日落</option>
-          <option value="custom">自定义</option>
-        </select>
-      </div>
-      <div class="color-picker" id="colorPicker">
-        <div class="color-item">
-          <label>前景色:</label>
-          <input type="color" id="foregroundColor" value="#ffffff">
+    
+    <div class="settings">
+      <button class="settings-btn" id="settingsBtn">⚙️</button>
+      <div class="settings-panel" id="settingsPanel">
+        <div class="settings-section">
+          <div class="settings-title">🎨 主题</div>
+          <div class="theme-options">
+            <button class="theme-option active" data-theme="classic">⬛ 经典</button>
+            <button class="theme-option" data-theme="dark">🌙 暗黑</button>
+            <button class="theme-option" data-theme="light">☀️ 明亮</button>
+            <button class="theme-option" data-theme="ocean">🌊 海洋</button>
+            <button class="theme-option" data-theme="sunset">🌅 日落</button>
+            <button class="theme-option" data-theme="custom">🎨 自定义</button>
+          </div>
         </div>
-        <div class="color-item">
-          <label>背景色:</label>
-          <input type="color" id="backgroundColor" value="#1a1a2e">
+        
+        <div class="settings-section">
+          <div class="settings-title">✨ 动画</div>
+          <div class="animation-options">
+            <button class="animation-option active" data-animation="flip">📖 翻页</button>
+            <button class="animation-option" data-animation="slide">⬆️ 滑动</button>
+            <button class="animation-option" data-animation="fade">🔄 淡入</button>
+            <button class="animation-option" data-animation="zoom">🔍 缩放</button>
+            <button class="animation-option" data-animation="rotate">🔄 旋转</button>
+          </div>
         </div>
-        <div class="color-item">
-          <label>数字色:</label>
-          <input type="color" id="digitColor" value="#ffffff">
-        </div>
-        <div class="color-item">
-          <label>分隔符色:</label>
-          <input type="color" id="separatorColor" value="#ff6b6b">
+        
+        <div class="settings-section" id="customColors" style="display: none;">
+          <div class="settings-title">🖌️ 自定义颜色</div>
+          <div class="color-options">
+            <div class="color-option">
+              <input type="color" id="foregroundColor" value="#333333">
+              <span>前景</span>
+            </div>
+            <div class="color-option">
+              <input type="color" id="backgroundColor" value="#1a1a1a">
+              <span>背景</span>
+            </div>
+            <div class="color-option">
+              <input type="color" id="digitColor" value="#ffffff">
+              <span>数字</span>
+            </div>
+            <div class="color-option">
+              <input type="color" id="separatorColor" value="#888888">
+              <span>分隔</span>
+            </div>
+          </div>
         </div>
       </div>
     </div>
