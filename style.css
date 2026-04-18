@@ -7,7 +7,7 @@
 body {
   font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
   overflow: hidden;
-  background-color: #1a1a2e;
+  background-color: #1a1a1a;
 }
 
 .container {
@@ -26,99 +26,167 @@ body {
   max-height: 100%;
 }
 
-.controls {
+.settings {
   position: absolute;
-  bottom: 20px;
-  left: 50%;
-  transform: translateX(-50%);
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 15px;
-  background-color: rgba(0, 0, 0, 0.5);
-  padding: 15px 25px;
-  border-radius: 10px;
-  backdrop-filter: blur(10px);
+  top: 20px;
+  right: 20px;
+  z-index: 100;
 }
 
-.theme-selector {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
-
-.theme-selector label {
-  color: #ffffff;
-  font-size: 14px;
-}
-
-.theme-selector select {
-  padding: 5px 10px;
-  border-radius: 5px;
+.settings-btn {
+  width: 48px;
+  height: 48px;
   border: none;
-  background-color: rgba(255, 255, 255, 0.1);
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(10px);
   color: #ffffff;
-  font-size: 14px;
+  font-size: 24px;
   cursor: pointer;
-}
-
-.theme-selector select option {
-  background-color: #1a1a2e;
-  color: #ffffff;
-}
-
-.color-picker {
-  display: none;
-  flex-wrap: wrap;
-  justify-content: center;
-  gap: 15px;
-}
-
-.color-picker.active {
-  display: flex;
-}
-
-.color-item {
+  transition: all 0.3s ease;
   display: flex;
   align-items: center;
+  justify-content: center;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+}
+
+.settings-btn:hover {
+  background: rgba(255, 255, 255, 0.2);
+  transform: rotate(30deg) scale(1.05);
+}
+
+.settings-btn.active {
+  background: rgba(255, 255, 255, 0.25);
+  transform: rotate(60deg);
+}
+
+.settings-panel {
+  position: absolute;
+  top: 60px;
+  right: 0;
+  width: 320px;
+  background: rgba(30, 30, 30, 0.95);
+  backdrop-filter: blur(20px);
+  border-radius: 16px;
+  padding: 20px;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.4);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  transform: translateY(-20px);
+  opacity: 0;
+  visibility: hidden;
+  transition: all 0.3s ease;
+}
+
+.settings-panel.open {
+  transform: translateY(0);
+  opacity: 1;
+  visibility: visible;
+}
+
+.settings-section {
+  margin-bottom: 24px;
+}
+
+.settings-section:last-child {
+  margin-bottom: 0;
+}
+
+.settings-title {
+  color: #ffffff;
+  font-size: 14px;
+  font-weight: 600;
+  margin-bottom: 12px;
+  opacity: 0.8;
+}
+
+.theme-options,
+.animation-options {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
   gap: 8px;
 }
 
-.color-item label {
+.theme-option,
+.animation-option {
+  padding: 10px 8px;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.05);
   color: #ffffff;
   font-size: 12px;
-}
-
-.color-item input[type="color"] {
-  width: 30px;
-  height: 30px;
-  border: none;
-  border-radius: 5px;
   cursor: pointer;
-  background-color: transparent;
+  transition: all 0.2s ease;
+  text-align: center;
+  font-weight: 500;
 }
 
-.color-item input[type="color"]::-webkit-color-swatch-wrapper {
-  padding: 0;
+.theme-option:hover,
+.animation-option:hover {
+  background: rgba(255, 255, 255, 0.1);
+  border-color: rgba(255, 255, 255, 0.3);
+  transform: translateY(-1px);
 }
 
-.color-item input[type="color"]::-webkit-color-swatch {
+.theme-option.active,
+.animation-option.active {
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.2), rgba(255, 255, 255, 0.1));
+  border-color: rgba(255, 255, 255, 0.5);
+  box-shadow: 0 2px 10px rgba(255, 255, 255, 0.1);
+}
+
+.color-options {
+  display: flex;
+  gap: 16px;
+  justify-content: space-between;
+  flex-wrap: wrap;
+}
+
+.color-option {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+}
+
+.color-option input[type="color"] {
+  width: 40px;
+  height: 40px;
   border: 2px solid rgba(255, 255, 255, 0.3);
-  border-radius: 3px;
+  border-radius: 10px;
+  cursor: pointer;
+  background: transparent;
+  padding: 0;
+  transition: all 0.2s ease;
 }
 
-@media (max-width: 600px) {
-  .controls {
-    bottom: 10px;
-    padding: 10px 15px;
+.color-option input[type="color"]:hover {
+  border-color: rgba(255, 255, 255, 0.6);
+  transform: scale(1.05);
+}
+
+.color-option input[type="color"]::-webkit-color-swatch-wrapper {
+  padding: 3px;
+}
+
+.color-option input[type="color"]::-webkit-color-swatch {
+  border-radius: 8px;
+  border: none;
+}
+
+.color-option span {
+  color: #ffffff;
+  font-size: 11px;
+  opacity: 0.7;
+}
+
+@media (max-width: 400px) {
+  .settings-panel {
+    width: 280px;
+    right: 0;
   }
   
-  .color-picker {
-    gap: 10px;
-  }
-  
-  .color-item {
-    flex-direction: column;
-    gap: 5px;
+  .theme-options,
+  .animation-options {
+    grid-template-columns: repeat(2, 1fr);
   }
 }
