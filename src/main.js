@@ -296,15 +296,25 @@ function drawDigit(x, y, width, height, digitKey) {
 function drawRowSeparator(ctx, x, y, width, height, theme) {
   ctx.save();
   
-  const gradient = ctx.createLinearGradient(x, y - height / 2, x, y + height / 2);
-  gradient.addColorStop(0, 'rgba(0, 0, 0, 0)');
-  gradient.addColorStop(0.3, theme.separator);
-  gradient.addColorStop(0.5, theme.separator);
-  gradient.addColorStop(0.7, theme.separator);
-  gradient.addColorStop(1, 'rgba(0, 0, 0, 0)');
+  const grooveHeight = height * 1.5;
+  const grooveGradient = ctx.createLinearGradient(x, y - grooveHeight / 2, x, y + grooveHeight / 2);
+  grooveGradient.addColorStop(0, 'rgba(0, 0, 0, 0)');
+  grooveGradient.addColorStop(0.3, 'rgba(0, 0, 0, 0.3)');
+  grooveGradient.addColorStop(0.5, 'rgba(0, 0, 0, 0.15)');
+  grooveGradient.addColorStop(0.7, 'rgba(0, 0, 0, 0.3)');
+  grooveGradient.addColorStop(1, 'rgba(0, 0, 0, 0)');
   
-  ctx.fillStyle = gradient;
-  ctx.fillRect(x, y - height / 2, width, height);
+  ctx.fillStyle = grooveGradient;
+  ctx.fillRect(x, y - grooveHeight / 2, width, grooveHeight);
+  
+  const highlightHeight = height * 0.5;
+  const highlightGradient = ctx.createLinearGradient(x, y - highlightHeight / 2, x, y + highlightHeight / 2);
+  highlightGradient.addColorStop(0, 'rgba(255, 255, 255, 0.05)');
+  highlightGradient.addColorStop(0.5, 'rgba(255, 255, 255, 0.15)');
+  highlightGradient.addColorStop(1, 'rgba(255, 255, 255, 0.05)');
+  
+  ctx.fillStyle = highlightGradient;
+  ctx.fillRect(x, y - highlightHeight / 2, width, highlightHeight);
   
   ctx.restore();
 }
@@ -356,8 +366,8 @@ function render() {
     drawDigit(startX + digitWidth * 5 + cardGap * 3 + separatorSize * 2, startY, digitWidth, digitHeight, 'second2');
   } else {
     const singleRowHeightRatio = 3;
-    const separatorRatio = 0.15;
-    const marginRatio = 1.4;
+    const separatorRatio = 0.25;
+    const marginRatio = 1.2;
     
     const totalRowsRatio = singleRowHeightRatio * 3 + separatorRatio * 2 + marginRatio * 2;
     
@@ -386,18 +396,21 @@ function render() {
     const minuteStartX = hourStartX;
     const secondStartX = hourStartX;
     
-    const separatorLineWidth = Math.min(width * 0.4, twoDigitTotalWidth * 1.2);
-    const separatorLineX = (width - separatorLineWidth) / 2;
+    const separatorLineWidth = twoDigitTotalWidth;
+    const separatorLineX = hourStartX;
+    
+    const hourSeparatorY = hourStartY + singleRowHeight + rowSeparatorHeight / 2;
+    const minuteSeparatorY = minuteStartY + singleRowHeight + rowSeparatorHeight / 2;
     
     drawDigit(hourStartX, hourStartY, digitWidth, digitHeight, 'hour1');
     drawDigit(hourStartX + digitWidth + cardGap, hourStartY, digitWidth, digitHeight, 'hour2');
     
-    drawRowSeparator(ctx, separatorLineX, hourStartY + singleRowHeight + rowSeparatorHeight / 2, separatorLineWidth, rowSeparatorHeight, theme);
+    drawRowSeparator(ctx, separatorLineX, hourSeparatorY, separatorLineWidth, rowSeparatorHeight * 0.4, theme);
     
     drawDigit(minuteStartX, minuteStartY, digitWidth, digitHeight, 'minute1');
     drawDigit(minuteStartX + digitWidth + cardGap, minuteStartY, digitWidth, digitHeight, 'minute2');
     
-    drawRowSeparator(ctx, separatorLineX, minuteStartY + singleRowHeight + rowSeparatorHeight / 2, separatorLineWidth, rowSeparatorHeight, theme);
+    drawRowSeparator(ctx, separatorLineX, minuteSeparatorY, separatorLineWidth, rowSeparatorHeight * 0.4, theme);
     
     drawDigit(secondStartX, secondStartY, digitWidth, digitHeight, 'second1');
     drawDigit(secondStartX + digitWidth + cardGap, secondStartY, digitWidth, digitHeight, 'second2');
