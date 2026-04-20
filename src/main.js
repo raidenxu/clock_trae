@@ -316,20 +316,13 @@ function render() {
       const maxDigitHeightByWidth = (width * 0.9) / totalWidthRatio;
       digitHeight = Math.min(height * 0.9, maxDigitHeightByWidth);
     }
-  } else {
-    const totalWidthRatio = 6 * singleDigitAspectRatio + 0.3 * 2 + cardGap * 4 / 100;
-    const maxDigitHeightByWidth = (width * 0.95) / totalWidthRatio;
-    const maxDigitHeightByHeight = height * 0.4;
-    digitHeight = Math.min(maxDigitHeightByWidth, maxDigitHeightByHeight);
-  }
-  
-  digitWidth = digitHeight * singleDigitAspectRatio;
-  separatorSize = digitHeight * 0.3;
-  
-  const totalWidth = digitWidth * 6 + separatorSize * 2 + cardGap * 4;
-  const totalHeight = digitHeight;
-  
-  if (isLandscape) {
+    
+    digitWidth = digitHeight * singleDigitAspectRatio;
+    separatorSize = digitHeight * 0.3;
+    
+    const totalWidth = digitWidth * 6 + separatorSize * 2 + cardGap * 4;
+    const totalHeight = digitHeight;
+    
     const startX = (width - totalWidth) / 2;
     const startY = (height - totalHeight) / 2;
     
@@ -346,34 +339,46 @@ function render() {
     drawDigit(startX + digitWidth * 4 + cardGap * 2 + separatorSize * 2, startY, digitWidth, digitHeight, 'second1');
     drawDigit(startX + digitWidth * 5 + cardGap * 3 + separatorSize * 2, startY, digitWidth, digitHeight, 'second2');
   } else {
-    const hourMinuteWidth = digitWidth * 4 + separatorSize + cardGap * 3;
-    const secondsWidth = digitWidth * 2 + cardGap;
+    const singleRowHeightRatio = 3;
+    const separatorRatio = 0.3;
+    const totalRowsRatio = singleRowHeightRatio * 3 + separatorRatio * 2;
     
-    const hourMinuteStartX = (width - hourMinuteWidth) / 2;
-    const secondsStartX = (width - secondsWidth) / 2;
+    const maxDigitHeightByHeight = (height * 0.95) / totalRowsRatio * singleRowHeightRatio;
     
-    const totalContentHeight = digitHeight + separatorSize + digitHeight * 0.8;
+    const twoDigitWidthRatio = 2 * singleDigitAspectRatio + separatorRatio;
+    const maxDigitHeightByWidth = (width * 0.95) / twoDigitWidthRatio;
+    
+    digitHeight = Math.min(maxDigitHeightByHeight, maxDigitHeightByWidth);
+    digitWidth = digitHeight * singleDigitAspectRatio;
+    separatorSize = digitHeight * separatorRatio;
+    
+    const singleRowHeight = digitHeight;
+    const rowSeparatorHeight = separatorSize;
+    
+    const totalContentHeight = singleRowHeight * 3 + rowSeparatorHeight * 2;
     const startY = (height - totalContentHeight) / 2;
     
-    const hourMinuteStartY = startY;
-    const secondsStartY = startY + digitHeight + separatorSize;
+    const hourStartY = startY;
+    const minuteStartY = startY + singleRowHeight + rowSeparatorHeight;
+    const secondStartY = startY + (singleRowHeight + rowSeparatorHeight) * 2;
     
-    const secondsDigitHeight = digitHeight * 0.8;
-    const secondsDigitWidth = secondsDigitHeight * singleDigitAspectRatio;
-    const secondsSeparatorSize = secondsDigitHeight * 0.3;
+    const twoDigitTotalWidth = digitWidth * 2 + separatorSize;
+    const hourStartX = (width - twoDigitTotalWidth) / 2;
+    const minuteStartX = hourStartX;
+    const secondStartX = hourStartX;
     
-    drawDigit(hourMinuteStartX, hourMinuteStartY, digitWidth, digitHeight, 'hour1');
-    drawDigit(hourMinuteStartX + digitWidth + cardGap, hourMinuteStartY, digitWidth, digitHeight, 'hour2');
+    drawDigit(hourStartX, hourStartY, digitWidth, digitHeight, 'hour1');
+    drawDigit(hourStartX + digitWidth + cardGap, hourStartY, digitWidth, digitHeight, 'hour2');
     
-    drawSeparator(ctx, hourMinuteStartX + digitWidth * 2 + cardGap + separatorSize / 2, hourMinuteStartY + digitHeight / 2, separatorSize);
+    drawSeparator(ctx, width / 2, hourStartY + singleRowHeight + rowSeparatorHeight / 2, separatorSize);
     
-    drawDigit(hourMinuteStartX + digitWidth * 2 + cardGap + separatorSize, hourMinuteStartY, digitWidth, digitHeight, 'minute1');
-    drawDigit(hourMinuteStartX + digitWidth * 3 + cardGap * 2 + separatorSize, hourMinuteStartY, digitWidth, digitHeight, 'minute2');
+    drawDigit(minuteStartX, minuteStartY, digitWidth, digitHeight, 'minute1');
+    drawDigit(minuteStartX + digitWidth + cardGap, minuteStartY, digitWidth, digitHeight, 'minute2');
     
-    drawSeparator(ctx, width / 2, secondsStartY - separatorSize / 2, secondsSeparatorSize);
+    drawSeparator(ctx, width / 2, minuteStartY + singleRowHeight + rowSeparatorHeight / 2, separatorSize);
     
-    drawDigit(secondsStartX, secondsStartY, secondsDigitWidth, secondsDigitHeight, 'second1');
-    drawDigit(secondsStartX + secondsDigitWidth + cardGap, secondsStartY, secondsDigitWidth, secondsDigitHeight, 'second2');
+    drawDigit(secondStartX, secondStartY, digitWidth, digitHeight, 'second1');
+    drawDigit(secondStartX + digitWidth + cardGap, secondStartY, digitWidth, digitHeight, 'second2');
   }
   
   requestAnimationFrame(render);
