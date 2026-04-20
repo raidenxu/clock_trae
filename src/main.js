@@ -26,10 +26,13 @@ const separatorColorInput = document.getElementById('separatorColor');
 
 let animatingDigits = {};
 let currentDisplayTime = getCurrentTime();
+let settingsBtnTimeout = null;
+const SETTINGS_BTN_TIMEOUT = 3000;
 
 function init() {
   resizeCanvas();
   setupEventListeners();
+  setupAutoHideSettingsBtn();
   updateTime();
   requestAnimationFrame(render);
 }
@@ -124,6 +127,47 @@ function handleCustomColorChange(colorType, value) {
 function toggleSettingsPanel() {
   settingsBtn.classList.toggle('active');
   settingsPanel.classList.toggle('open');
+  
+  if (settingsPanel.classList.contains('open')) {
+    showSettingsBtn();
+    if (settingsBtnTimeout) {
+      clearTimeout(settingsBtnTimeout);
+    }
+  } else {
+    showSettingsBtn();
+  }
+}
+
+function setupAutoHideSettingsBtn() {
+  hideSettingsBtn();
+  
+  const showEvents = ['mousemove', 'click', 'touchstart'];
+  
+  showEvents.forEach(eventType => {
+    document.addEventListener(eventType, showSettingsBtn);
+  });
+}
+
+function showSettingsBtn() {
+  settingsBtn.style.opacity = '1';
+  settingsBtn.style.pointerEvents = 'auto';
+  
+  if (settingsBtnTimeout) {
+    clearTimeout(settingsBtnTimeout);
+  }
+  
+  if (!settingsPanel.classList.contains('open')) {
+    settingsBtnTimeout = setTimeout(hideSettingsBtn, SETTINGS_BTN_TIMEOUT);
+  }
+}
+
+function hideSettingsBtn() {
+  if (settingsPanel.classList.contains('open')) {
+    return;
+  }
+  
+  settingsBtn.style.opacity = '0';
+  settingsBtn.style.pointerEvents = 'none';
 }
 
 function closeSettingsPanel() {
@@ -257,10 +301,19 @@ function render() {
   ctx.fillStyle = theme.background;
   ctx.fillRect(0, 0, width, height);
   
-  const clockWidth = Math.min(width * 0.9, height * 0.6);
-  const digitHeight = clockWidth * 0.3;
-  const digitWidth = digitHeight * 0.6;
-  const separatorSize = digitHeight * 0.3;
+  const isLandscape = width > height;
+  let digitHeight, digitWidth, separatorSize;
+  
+  if (isLandscape) {
+    digitHeight = Math.min(width * 0.35, height * 0.85);
+    digitWidth = digitHeight * 0.6;
+    separatorSize = digitHeight * 0.3;
+  } else {
+    digitHeight = Math.min(width * 0.35, height * 0.5);
+    digitWidth = digitHeight * 0.6;
+    separatorSize = digitHeight * 0.3;
+  }
+  
   const cardGap = 1;
   
   const totalWidth = digitWidth * 6 + separatorSize * 2 + cardGap * 4;
