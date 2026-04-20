@@ -293,6 +293,22 @@ function drawDigit(x, y, width, height, digitKey) {
   }
 }
 
+function drawRowSeparator(ctx, x, y, width, height, theme) {
+  ctx.save();
+  
+  const gradient = ctx.createLinearGradient(x, y - height / 2, x, y + height / 2);
+  gradient.addColorStop(0, 'rgba(0, 0, 0, 0)');
+  gradient.addColorStop(0.3, theme.separator);
+  gradient.addColorStop(0.5, theme.separator);
+  gradient.addColorStop(0.7, theme.separator);
+  gradient.addColorStop(1, 'rgba(0, 0, 0, 0)');
+  
+  ctx.fillStyle = gradient;
+  ctx.fillRect(x, y - height / 2, width, height);
+  
+  ctx.restore();
+}
+
 function render() {
   const theme = getCurrentTheme();
   const width = canvas.width / (window.devicePixelRatio || 1);
@@ -340,23 +356,26 @@ function render() {
     drawDigit(startX + digitWidth * 5 + cardGap * 3 + separatorSize * 2, startY, digitWidth, digitHeight, 'second2');
   } else {
     const singleRowHeightRatio = 3;
-    const separatorRatio = 0.3;
-    const totalRowsRatio = singleRowHeightRatio * 3 + separatorRatio * 2;
+    const separatorRatio = 0.15;
+    const marginRatio = 1.4;
     
-    const maxDigitHeightByHeight = (height * 0.95) / totalRowsRatio * singleRowHeightRatio;
+    const totalRowsRatio = singleRowHeightRatio * 3 + separatorRatio * 2 + marginRatio * 2;
     
-    const twoDigitWidthRatio = 2 * singleDigitAspectRatio + separatorRatio;
+    const maxDigitHeightByHeight = (height * 0.98) / totalRowsRatio * singleRowHeightRatio;
+    
+    const twoDigitWidthRatio = 2 * singleDigitAspectRatio + 0.3;
     const maxDigitHeightByWidth = (width * 0.95) / twoDigitWidthRatio;
     
     digitHeight = Math.min(maxDigitHeightByHeight, maxDigitHeightByWidth);
     digitWidth = digitHeight * singleDigitAspectRatio;
-    separatorSize = digitHeight * separatorRatio;
+    separatorSize = digitHeight * 0.3;
     
     const singleRowHeight = digitHeight;
-    const rowSeparatorHeight = separatorSize;
+    const rowSeparatorHeight = digitHeight * separatorRatio;
+    const marginHeight = digitHeight * marginRatio;
     
-    const totalContentHeight = singleRowHeight * 3 + rowSeparatorHeight * 2;
-    const startY = (height - totalContentHeight) / 2;
+    const totalContentHeight = singleRowHeight * 3 + rowSeparatorHeight * 2 + marginHeight * 2;
+    const startY = (height - totalContentHeight) / 2 + marginHeight;
     
     const hourStartY = startY;
     const minuteStartY = startY + singleRowHeight + rowSeparatorHeight;
@@ -367,15 +386,18 @@ function render() {
     const minuteStartX = hourStartX;
     const secondStartX = hourStartX;
     
+    const separatorLineWidth = Math.min(width * 0.4, twoDigitTotalWidth * 1.2);
+    const separatorLineX = (width - separatorLineWidth) / 2;
+    
     drawDigit(hourStartX, hourStartY, digitWidth, digitHeight, 'hour1');
     drawDigit(hourStartX + digitWidth + cardGap, hourStartY, digitWidth, digitHeight, 'hour2');
     
-    drawSeparator(ctx, width / 2, hourStartY + singleRowHeight + rowSeparatorHeight / 2, separatorSize);
+    drawRowSeparator(ctx, separatorLineX, hourStartY + singleRowHeight + rowSeparatorHeight / 2, separatorLineWidth, rowSeparatorHeight, theme);
     
     drawDigit(minuteStartX, minuteStartY, digitWidth, digitHeight, 'minute1');
     drawDigit(minuteStartX + digitWidth + cardGap, minuteStartY, digitWidth, digitHeight, 'minute2');
     
-    drawSeparator(ctx, width / 2, minuteStartY + singleRowHeight + rowSeparatorHeight / 2, separatorSize);
+    drawRowSeparator(ctx, separatorLineX, minuteStartY + singleRowHeight + rowSeparatorHeight / 2, separatorLineWidth, rowSeparatorHeight, theme);
     
     drawDigit(secondStartX, secondStartY, digitWidth, digitHeight, 'second1');
     drawDigit(secondStartX + digitWidth + cardGap, secondStartY, digitWidth, digitHeight, 'second2');
