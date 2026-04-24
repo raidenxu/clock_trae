@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Fnt Clock Icon Generator</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: #1a1a1a;
+      color: #fff;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      margin: 0;
+      padding: 20px;
+    }
+    h1 {
+      margin-bottom: 30px;
+    }
+    .container {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 30px;
+      justify-content: center;
+      align-items: flex-start;
+    }
+    .icon-preview {
+      text-align: center;
+    }
+    canvas {
+      border-radius: 24px;
+      box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
+      margin-bottom: 15px;
+    }
+    .download-btn {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      border: none;
+      color: white;
+      padding: 12px 24px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 14px;
+      font-weight: 600;
+      transition: all 0.3s ease;
+    }
+    .download-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 5px 20px rgba(102, 126, 234, 0.4);
+    }
+    .instructions {
+      margin-top: 40px;
+      max-width: 600px;
+      background: rgba(255, 255, 255, 0.05);
+      padding: 20px;
+      border-radius: 12px;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+    .instructions h2 {
+      margin-top: 0;
+      font-size: 18px;
+    }
+    .instructions ol {
+      padding-left: 20px;
+      line-height: 1.8;
+    }
+    .instructions code {
+      background: rgba(0, 0, 0, 0.3);
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-family: monospace;
+    }
+  </style>
+</head>
+<body>
+  <h1>Fnt Clock - 图标生成器</h1>
+  
+  <div class="container">
+    <div class="icon-preview">
+      <canvas id="icon256" width="256" height="256"></canvas>
+      <div>256x256 (用于 @2x)</div>
+      <button class="download-btn" onclick="downloadIcon(256)">下载 256x256</button>
+    </div>
+    <div class="icon-preview">
+      <canvas id="icon128" width="128" height="128"></canvas>
+      <div>128x128</div>
+      <button class="download-btn" onclick="downloadIcon(128)">下载 128x128</button>
+    </div>
+    <div class="icon-preview">
+      <canvas id="icon32" width="32" height="32"></canvas>
+      <div>32x32</div>
+      <button class="download-btn" onclick="downloadIcon(32)">下载 32x32</button>
+    </div>
+  </div>
+
+  <div class="instructions">
+    <h2>使用方法</h2>
+    <ol>
+      <li>下载 128x128 或 256x256 的图标</li>
+      <li>将下载的图片重命名为 <code>icon.png</code></li>
+      <li>放到项目根目录</li>
+      <li>运行 <code>pnpm tauri icon icon.png</code></li>
+      <li>Tauri CLI 会自动生成所有需要的图标格式（.icns, .ico, 各种尺寸的PNG）</li>
+    </ol>
+    <p>或者：手动下载各个尺寸的PNG，然后使用在线工具转换格式。</p>
+  </div>
+
+  <script>
+    function drawIcon(ctx, size) {
+      const padding = size * 0.1;
+      const innerSize = size - padding * 2;
+      const radius = innerSize * 0.15;
+      
+      ctx.fillStyle = '#1a1a1a';
+      roundRect(ctx, padding, padding, innerSize, innerSize, radius);
+      ctx.fill();
+      
+      const digitWidth = innerSize * 0.4;
+      const digitHeight = innerSize * 0.8;
+      const gap = innerSize * 0.05;
+      const totalWidth = digitWidth * 2 + gap;
+      const startX = padding + (innerSize - totalWidth) / 2;
+      const startY = padding + (innerSize - digitHeight) / 2;
+      
+      drawDigit(ctx, startX, startY, digitWidth, digitHeight, '1');
+      drawDigit(ctx, startX + digitWidth + gap, startY, digitWidth, digitHeight, '2');
+    }
+
+    function roundRect(ctx, x, y, w, h, r) {
+      ctx.beginPath();
+      ctx.moveTo(x + r, y);
+      ctx.lineTo(x + w - r, y);
+      ctx.quadraticCurveTo(x + w, y, x + w, y + r);
+      ctx.lineTo(x + w, y + h - r);
+      ctx.quadraticCurveTo(x + w, y + h, x + w - r, y + h);
+      ctx.lineTo(x + r, y + h);
+      ctx.quadraticCurveTo(x, y + h, x, y + h - r);
+      ctx.lineTo(x, y + r);
+      ctx.quadraticCurveTo(x, y, x + r, y);
+      ctx.closePath();
+    }
+
+    function drawDigit(ctx, x, y, width, height, digit) {
+      const radius = width * 0.12;
+      const lineWidth = height * 0.08;
+      
+      ctx.fillStyle = '#333333';
+      roundRect(ctx, x, y, width, height, radius);
+      ctx.fill();
+      
+      ctx.strokeStyle = '#ffffff';
+      ctx.lineWidth = lineWidth;
+      ctx.lineCap = 'round';
+      ctx.lineJoin = 'round';
+      
+      const cx = x + width / 2;
+      const cy = y + height / 2;
+      const segmentWidth = width * 0.65;
+      const segmentHeight = height * 0.22;
+      const gap = height * 0.04;
+      
+      const topY = cy - segmentHeight - gap;
+      const middleY = cy;
+      const bottomY = cy + segmentHeight + gap;
+      
+      const segments = {
+        top: digit !== '1' && digit !== '4',
+        topRight: digit !== '5' && digit !== '6',
+        bottomRight: digit !== '2',
+        bottom: digit !== '1' && digit !== '4' && digit !== '7',
+        bottomLeft: digit === '2' || digit === '6' || digit === '8' || digit === '0',
+        topLeft: digit !== '1' && digit !== '2' && digit !== '3' && digit !== '7',
+        middle: digit !== '1' && digit !== '7' && digit !== '0'
+      };
+      
+      if (segments.top) drawHorizontalSegment(ctx, cx, topY, segmentWidth, segmentHeight);
+      if (segments.middle) drawHorizontalSegment(ctx, cx, middleY, segmentWidth, segmentHeight);
+      if (segments.bottom) drawHorizontalSegment(ctx, cx, bottomY, segmentWidth, segmentHeight);
+      
+      const verticalTopY = cy - segmentHeight / 2 - gap / 2;
+      const verticalBottomY = cy + segmentHeight / 2 + gap / 2;
+      const verticalHeight = segmentHeight + gap;
+      const leftX = cx - segmentWidth / 2;
+      const rightX = cx + segmentWidth / 2;
+      
+      if (segments.topLeft) drawVerticalSegment(ctx, leftX, verticalTopY, lineWidth, verticalHeight);
+      if (segments.bottomLeft) drawVerticalSegment(ctx, leftX, verticalBottomY, lineWidth, verticalHeight);
+      if (segments.topRight) drawVerticalSegment(ctx, rightX, verticalTopY, lineWidth, verticalHeight);
+      if (segments.bottomRight) drawVerticalSegment(ctx, rightX, verticalBottomY, lineWidth, verticalHeight);
+    }
+
+    function drawHorizontalSegment(ctx, cx, cy, width, height) {
+      ctx.beginPath();
+      ctx.moveTo(cx - width / 2, cy);
+      ctx.lineTo(cx - width / 2 + height / 2, cy - height / 2);
+      ctx.lineTo(cx + width / 2 - height / 2, cy - height / 2);
+      ctx.lineTo(cx + width / 2, cy);
+      ctx.lineTo(cx + width / 2 - height / 2, cy + height / 2);
+      ctx.lineTo(cx - width / 2 + height / 2, cy + height / 2);
+      ctx.closePath();
+      ctx.fill();
+    }
+
+    function drawVerticalSegment(ctx, cx, cy, width, height) {
+      ctx.beginPath();
+      ctx.moveTo(cx, cy - height / 2);
+      ctx.lineTo(cx + width / 2, cy - height / 2 + width / 2);
+      ctx.lineTo(cx + width / 2, cy + height / 2 - width / 2);
+      ctx.lineTo(cx, cy + height / 2);
+      ctx.lineTo(cx - width / 2, cy + height / 2 - width / 2);
+      ctx.lineTo(cx - width / 2, cy - height / 2 + width / 2);
+      ctx.closePath();
+      ctx.fill();
+    }
+
+    function downloadIcon(size) {
+      const tempCanvas = document.createElement('canvas');
+      tempCanvas.width = size;
+      tempCanvas.height = size;
+      const ctx = tempCanvas.getContext('2d');
+      drawIcon(ctx, size);
+      
+      const link = document.createElement('a');
+      link.download = `icon-${size}x${size}.png`;
+      link.href = tempCanvas.toDataURL('image/png');
+      link.click();
+    }
+
+    [32, 128, 256].forEach(size => {
+      const canvas = document.getElementById(`icon${size}`);
+      const ctx = canvas.getContext('2d');
+      drawIcon(ctx, size);
+    });
+  </script>
+</body>
+</html>
