@@ -293,25 +293,29 @@ function drawDigit(x, y, width, height, digitKey) {
   }
 }
 
-function drawRowSeparator(ctx, x, y, width, height, theme) {
+function drawRowSeparator(ctx, x, y, width, theme) {
   ctx.save();
   
-  const grooveHeight = height * 1.5;
-  const grooveGradient = ctx.createLinearGradient(x, y - grooveHeight / 2, x, y + grooveHeight / 2);
+  const grooveHeight = 6;
+  const highlightHeight = 2;
+  const fadeLength = Math.min(width * 0.15, 30);
+  
+  const grooveGradient = ctx.createLinearGradient(x, y, x + width, y);
   grooveGradient.addColorStop(0, 'rgba(0, 0, 0, 0)');
-  grooveGradient.addColorStop(0.3, 'rgba(0, 0, 0, 0.3)');
-  grooveGradient.addColorStop(0.5, 'rgba(0, 0, 0, 0.15)');
-  grooveGradient.addColorStop(0.7, 'rgba(0, 0, 0, 0.3)');
+  grooveGradient.addColorStop(fadeLength / width, 'rgba(0, 0, 0, 0.2)');
+  grooveGradient.addColorStop(0.5, 'rgba(0, 0, 0, 0.1)');
+  grooveGradient.addColorStop(1 - fadeLength / width, 'rgba(0, 0, 0, 0.2)');
   grooveGradient.addColorStop(1, 'rgba(0, 0, 0, 0)');
   
   ctx.fillStyle = grooveGradient;
   ctx.fillRect(x, y - grooveHeight / 2, width, grooveHeight);
   
-  const highlightHeight = height * 0.5;
-  const highlightGradient = ctx.createLinearGradient(x, y - highlightHeight / 2, x, y + highlightHeight / 2);
-  highlightGradient.addColorStop(0, 'rgba(255, 255, 255, 0.05)');
-  highlightGradient.addColorStop(0.5, 'rgba(255, 255, 255, 0.15)');
-  highlightGradient.addColorStop(1, 'rgba(255, 255, 255, 0.05)');
+  const highlightGradient = ctx.createLinearGradient(x, y, x + width, y);
+  highlightGradient.addColorStop(0, 'rgba(255, 255, 255, 0)');
+  highlightGradient.addColorStop(fadeLength / width, 'rgba(255, 255, 255, 0.05)');
+  highlightGradient.addColorStop(0.5, 'rgba(255, 255, 255, 0.1)');
+  highlightGradient.addColorStop(1 - fadeLength / width, 'rgba(255, 255, 255, 0.05)');
+  highlightGradient.addColorStop(1, 'rgba(255, 255, 255, 0)');
   
   ctx.fillStyle = highlightGradient;
   ctx.fillRect(x, y - highlightHeight / 2, width, highlightHeight);
@@ -405,12 +409,12 @@ function render() {
     drawDigit(hourStartX, hourStartY, digitWidth, digitHeight, 'hour1');
     drawDigit(hourStartX + digitWidth + cardGap, hourStartY, digitWidth, digitHeight, 'hour2');
     
-    drawRowSeparator(ctx, separatorLineX, hourSeparatorY, separatorLineWidth, rowSeparatorHeight * 0.4, theme);
+    drawRowSeparator(ctx, separatorLineX, hourSeparatorY, separatorLineWidth, theme);
     
     drawDigit(minuteStartX, minuteStartY, digitWidth, digitHeight, 'minute1');
     drawDigit(minuteStartX + digitWidth + cardGap, minuteStartY, digitWidth, digitHeight, 'minute2');
     
-    drawRowSeparator(ctx, separatorLineX, minuteSeparatorY, separatorLineWidth, rowSeparatorHeight * 0.4, theme);
+    drawRowSeparator(ctx, separatorLineX, minuteSeparatorY, separatorLineWidth, theme);
     
     drawDigit(secondStartX, secondStartY, digitWidth, digitHeight, 'second1');
     drawDigit(secondStartX + digitWidth + cardGap, secondStartY, digitWidth, digitHeight, 'second2');

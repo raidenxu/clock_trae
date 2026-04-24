@@ -45,11 +45,8 @@ function drawFlippingTopOld(ctx, x, y, width, height, digit, progress, theme) {
   const centerX = x + width / 2;
   const centerY = y + height / 2;
   
-  const perspective = height * 2;
-  const scale = perspective / (perspective + height * (1 - cosAngle) * 0.5);
-  
   ctx.translate(centerX, centerY);
-  ctx.scale(scale, cosAngle * scale);
+  ctx.scale(1, cosAngle);
   ctx.translate(-centerX, -centerY);
   
   ctx.beginPath();
@@ -104,11 +101,8 @@ function drawFlippingBottomNew(ctx, x, y, width, height, digit, progress, theme)
   const centerX = x + width / 2;
   const centerY = y + height / 2;
   
-  const perspective = height * 2;
-  const scale = perspective / (perspective + height * cosAngle * 0.5);
-  
   ctx.translate(centerX, centerY);
-  ctx.scale(scale, scaleY * scale);
+  ctx.scale(1, scaleY);
   ctx.translate(-centerX, -centerY);
   
   ctx.beginPath();
